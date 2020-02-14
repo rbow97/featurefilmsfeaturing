@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>featurefilmsfeaturing</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Limelight&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Pattaya&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto+Condensed&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Sacramento&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Merriweather&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat&display=swap"
+      rel="stylesheet"
+    />
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <div class="heading">
+          <div class="heading__logo--main">
+            <a href="#" class="heading__text">Feature Films</a>
+            <div class="heading__logo--lines1">
+              <div class="heading__logo--line1"></div>
+              <div class="heading__logo--line2"></div>
+              <div class="heading__logo--line3"></div>
+            </div>
+            <div class="heading__logo--lines2">
+              <div class="heading__logo--line4"></div>
+              <div class="heading__logo--line5"></div>
+              <div class="heading__logo--line6"></div>
+            </div>
+          </div>
+          <div class="heading__logo--secondary">featuring</div>
+        </div>
+        <nav class="navbar">
+          <div class="navbar__navigation">
+            <ul>
+              <li><a href="#" id="moviesButton">Movies</a></li>
+              <li><a href="#" id="tvButton">TV</a></li>
+              <li><a href="#" id="peopleButton">People</a></li>
+              <li><a href="#" id="langButton">Language</a></li>
+            </ul>
+          </div>
+          <div class="navbar__box--lines">
+            <div class="navbar__box--line"></div>
+            <div class="navbar__box--line"></div>
+          </div>
+        </nav>
+      </header>
+      <div class="header__searchbar">
+        <form autocomplete="off" action="#" class="search">
+          <input type="text" class="search__input" placeholder="Search..." />
+          <button class="search__button">
+            <svg class="search__icon">
+              <use xlink:href="img/sprite.svg#icon-magnifying-glass"></use>
+            </svg>
+          </button>
+        </form>
+      </div>
+      <div class="results">
+        <div class="results__info">
+          <!-- <ul>
+            <li><a href="#" id="resultsMovies">Movies</a></li>
+            <li><a href="#" id="resultsRelated">Related Movies</a></li>
+            <li><a href="#" id="resultstvShows">TV Shows</a></li>
+            <li><a href="#" id="resultsPeople">People</a></li>
+          </ul> -->
+        </div>
+        <div class="results__output"></div>
+      </div>
+    </div>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
