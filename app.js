@@ -6,7 +6,14 @@ const results = document.querySelector(".results");
 const state = {
   userInput: "",
   results: [],
-  people: []
+  comparedResults: [],
+  people: [],
+  // credits: {
+  //   id: { cast: [{}, {}], crew: [{}, {}] }, // Get this data from API call and save it as a new K:V pair
+  //   id: { cast: [{}, {}], crew: [{}, {}] },
+  // },
+  credits: {},
+  moviesInTogether: []
 };
 
 async function getData(ID) {
@@ -28,6 +35,76 @@ async function getResults(input) {
     });
   return response.data.results;
 }
+
+const getCredits = async personId => {
+  const response = await axios
+    .get(
+      `https://api.themoviedb.org/3/person/${personId}/combined_credits?api_key=${key}&language=en-US`
+    )
+    .catch(error => {
+      console.log(error);
+    });
+  return response.data;
+};
+
+const storeCredits = () => {
+  state.people.forEach(async person => {
+    const response = await getCredits(person.id);
+
+    state.credits[person.id] = response;
+
+    // This will change the results__output div to show the movies that both the people from state.people are in
+    if (state.people.length > 1) {
+      compareCredits();
+    }
+  });
+};
+
+const compareCredits = () => {
+  // Takes an object and changes it's values into an array so we can loop over the values
+  const creditArray = Object.values(state.credits);
+  console.log(creditArray);
+
+  // New array that will hold smaller arrays of the films the people have been in
+  const filmArray = [];
+
+  // Loop over the new array
+  creditArray.forEach(element => {
+    let tempArray = [];
+    tempArray.push(element.cast);
+
+    // TODO - push crew into array
+
+    filmArray.push(tempArray);
+  });
+  console.log(filmArray);
+  console.log(filmArray[0][0]);
+  const outputArray = compareArrays(filmArray[1][0], filmArray[0][0]);
+
+  state.comparedResults = outputArray;
+  showCompResultsHtml();
+
+  // Very rough
+  // state.results = outputArray;
+  // showHtml("lol");
+};
+
+const compareArrays = (array1, array2) => {
+  //We need a better version
+  const outputArray = [];
+
+  // Sort the arrays so we have k sorted arrays
+
+  for (let i = 0; i < array1.length; i++) {
+    for (let j = 0; j < array2.length; j++) {
+      if (array1[i].id === array2[j].id) {
+        // console.log("successful comparison");
+        outputArray.push(array1[i]);
+      }
+    }
+  }
+  return outputArray;
+};
 
 // async function showData(ID) {
 //   const data = await getData(ID);
@@ -63,7 +140,37 @@ const checkFirst = () => {
   console.log(state.people);
 };
 
-async function showHtml(input) {
+const showCompResultsHtml = () => {
+  let html = "";
+
+  state.comparedResults.forEach(result => {
+    resultHtml = `<div class='results__card'>`;
+
+    if (result.original_title) {
+      resultHtml += `<h2>${result.original_title}</h2>`;
+    }
+    if (result.name) {
+      resultHtml += `<h2>${result.name}</h2>`;
+    }
+
+    if (result.vote_average) {
+      resultHtml += `<p>${result.vote_average}</p>`;
+    }
+    if (result.release_date) {
+      resultHtml += `<p>${result.release_date}</p>`;
+    }
+    if (result.known_for_department) {
+      resultHtml += `<p>${result.known_for_department}</p>`;
+    }
+
+    resultHtml += `</div>`;
+
+    html += resultHtml;
+  });
+  results__output.innerHTML = html;
+};
+
+function showHtml(input) {
   let html = "";
 
   if (input === "") {
@@ -73,9 +180,15 @@ async function showHtml(input) {
     state.results.forEach(result => {
       resultHtml = `<div class='results__card'>`;
 
+      if (result.poster_path) {
+        resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
+      }
+      resultHtml += `<div class = "results__card--info">`;
+
       if (result.original_title) {
         resultHtml += `<h2>${result.original_title}</h2>`;
       }
+
       if (result.release_date) {
         resultHtml += `<p>${result.release_date}</p>`;
       }
@@ -89,7 +202,7 @@ async function showHtml(input) {
         resultHtml += `<p>${result.known_for_department}</p>`;
       }
 
-      resultHtml += `</div>`;
+      resultHtml += `</div></div>`;
 
       html += resultHtml;
     });
@@ -109,6 +222,9 @@ async function getPopularMovies() {
 }
 
 async function showPopularMovies() {
+  state.people = [];
+  tagPeople("");
+  results__info.style.display = "none";
   let html = `<div class = "results__title">Popular Movies</div>`;
   const popMoviesArray = await getPopularMovies();
 
@@ -174,26 +290,25 @@ async function showPopularPeople() {
   results__output.innerHTML = html;
 }
 
-function showPeople(input) {
+function tagPeople(input) {
   let html = "";
 
   if (input === "") {
     results__info.innerHTML = html;
   } else {
-    resultHtml = `<a href="#" class='results__people'>`;
+    resultHtml = `<div class="results__header">
+                  <div class="results__header--title">Tagged</div>
+                  <button class="results__header--clear">clear</button>
+                  </div>
+                  <a href="#" class='results__people'>`;
+
+    const clearButton = document.querySelector(".result__header--clear");
 
     state.people.forEach(person => {
       resultHtml += `<p>${person.name}</p>`;
     });
 
     resultHtml += `</a>`;
-
-    // html = `<ul>
-    //   <li><a href="#" id="resultsMovies">Movies</a></li>
-    //   <li><a href="#" id="resultsRelated">Related Movies</a></li>
-    //   <li><a href="#" id="resultstvShows">TV Shows</a></li>
-    //   <li><a href="#" id="resultsPeople">People</a></li>
-    //   </ul>`;
     html += resultHtml;
   }
   results__info.innerHTML = html;
@@ -208,8 +323,9 @@ const preventTab = e => {
 const checkTabPress = e => {
   if (e.which === 9 || e.keyCode === 9) {
     checkFirst();
-    showPeople();
+    tagPeople();
     clearSearchInput();
+    storeCredits();
   }
 };
 
@@ -248,6 +364,7 @@ searchForm.onsubmit = e => {
 // });
 
 searchInput.oninput = e => {
+  results__info.style.display = "flex";
   handleChange(e);
 };
 
@@ -271,3 +388,7 @@ navPeople.onclick = () => {
 navLang.onclick = () => {
   searchInput;
 };
+
+// clearButton.onclick = () => {
+//   tagPeople("");
+// };
