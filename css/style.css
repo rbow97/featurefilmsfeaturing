@@ -665,7 +665,7 @@ body {
   box-sizing: border-box;
   height: 300px;
   margin: 1%;
-  border: 1px #000000 solid;
+  /* border: 1px #000000 solid; */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   background-color: #fffef2;
 }

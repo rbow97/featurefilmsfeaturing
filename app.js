@@ -2,6 +2,12 @@ const key = "35596d0ce1799b9e4c7617c1698f94dd";
 const results__output = document.querySelector(".results__output");
 const results__info = document.querySelector(".results__info");
 const results = document.querySelector(".results");
+const searchForm = document.querySelector(".search");
+const searchInput = document.querySelector(".search__input");
+const navMovies = document.querySelector("#moviesButton");
+const navTv = document.querySelector("#tvButton");
+const navPeople = document.querySelector("#peopleButton");
+const navLang = document.querySelector("#langButton");
 
 const state = {
   userInput: "",
@@ -16,16 +22,20 @@ const state = {
   moviesInTogether: []
 };
 
-async function getData(ID) {
+///////////////// GETTING DATA FUNCTIONS /////////////////
+
+// Not used now. Maybe later for getting individual movie data per person
+const getMovieData = async ID => {
   const response = await axios
     .get(`https://api.themoviedb.org/3/movie/${ID}?api_key=${key}`)
     .catch(error => {
       console.log(error);
     });
   return response.data;
-}
+};
 
-async function getResults(input) {
+// Multi-search. Gets any search result - people/tv/movie
+const getResults = async input => {
   const response = await axios
     .get(
       `https://api.themoviedb.org/3/search/multi?query=${input}&api_key=${key}`
@@ -34,8 +44,9 @@ async function getResults(input) {
       console.log(error);
     });
   return response.data.results;
-}
+};
 
+// Gets the credit info for a person
 const getCredits = async personId => {
   const response = await axios
     .get(
@@ -47,11 +58,86 @@ const getCredits = async personId => {
   return response.data;
 };
 
+// Gets current popular movies
+const getPopularMovies = async () => {
+  const response = await axios
+    .get(
+      `https://api.themoviedb.org/3/movie/popular?api_key=${key}&language=en-US&page=1`
+    )
+    .catch(error => {
+      console.log(error);
+    });
+  return response.data.results;
+};
+
+// Gets popular tv shows
+const getPopularTv = async () => {
+  const response = await axios
+    .get(
+      `https://api.themoviedb.org/3/tv/popular?api_key=${key}&language=en-US&page=1`
+    )
+    .catch(error => {
+      console.log(error);
+    });
+  return response.data.results;
+};
+
+// Get popular people
+const getPopularPeople = async () => {
+  const response = await axios
+    .get(
+      `https://api.themoviedb.org/3/person/popular?api_key=${key}&language=en-US&page=1`
+    )
+    .catch(error => {
+      console.log("error");
+    });
+  return response.data.results;
+};
+
+///////////////// STATE MANAGING FUNCTIONS /////////////////
+
+// Stores popular movies after using popular movies api, calls showHtml()
+const storePopularMovies = async () => {
+  state.people = [];
+  tagPeople("");
+  results__info.style.display = "none";
+
+  state.results = await getPopularMovies();
+  showHtml("input not needed", "popular_movies");
+};
+
+const showPopularTv = async () => {
+  state.people = [];
+  tagPeople("");
+  results__info.style.display = "none";
+
+  state.results = await getPopularTv();
+  showHtml("input not needed", "popular_tv");
+};
+
+const showPopularPeople = async () => {
+  state.people = [];
+  tagPeople("");
+  results__info.style.display = "none";
+
+  state.results = await getPopularPeople();
+  showHtml("input not needed", "popular_people");
+};
+
+// Saves the credits for the chosen person into the state
 const storeCredits = () => {
   state.people.forEach(async person => {
     const response = await getCredits(person.id);
 
+    //state.credits.push() - doesnt work as it creates a new array value each time rather that assigning K:V pairs
     state.credits[person.id] = response;
+    // state = {
+    //   people: [{id:something}]
+    //   credits: {
+    //     person.id: response,                     //
+    //     4598345798: { cast: [{}, {}], crew: [{}, {}] },  // result - what it WILL look like
+    //   }
+    // }
 
     // This will change the results__output div to show the movies that both the people from state.people are in
     if (state.people.length > 1) {
@@ -60,6 +146,7 @@ const storeCredits = () => {
   });
 };
 
+// Compare's the credits of the people in the state.people array
 const compareCredits = () => {
   // Takes an object and changes it's values into an array so we can loop over the values
   const creditArray = Object.values(state.credits);
@@ -82,13 +169,15 @@ const compareCredits = () => {
   const outputArray = compareArrays(filmArray[1][0], filmArray[0][0]);
 
   state.comparedResults = outputArray;
-  showCompResultsHtml();
+  // showHtml(input, type)
+  showHtml("input not needed", "compared_search");
 
   // Very rough
   // state.results = outputArray;
   // showHtml("lol");
 };
 
+// Compare arrays for the compareCredits function
 const compareArrays = (array1, array2) => {
   //We need a better version
   const outputArray = [];
@@ -106,22 +195,11 @@ const compareArrays = (array1, array2) => {
   return outputArray;
 };
 
-// async function showData(ID) {
-//   const data = await getData(ID);
-
-//   let html = `<div>
-//         <p>${data.original_title}</p>
-//         <p>${data.overview}</p>
-//     </div>`;
-
-//   results__output.innerHTML = html;
-// }
-
-function showResults(input) {
-  // showPeople(input);
+const showResults = input => {
   storeResults(input);
-}
+};
 
+// Gets the results of a search and stores in the state
 const storeResults = async input => {
   if (input === "") {
     return;
@@ -130,27 +208,35 @@ const storeResults = async input => {
     console.log(results);
     state.results = results;
   }
-  showHtml(input);
+  // showHtml is called inside this function as
+  // it has to be called after getResults has finished
+  showHtml(input, "standard_search");
 };
 
-const checkFirst = () => {
+// Checks that the first result in state.results is a person so they can be added to tags
+// Then adds them to state.people
+// TODO - stop duplicates being added here - probably with a set
+const addFirstPerson = () => {
   if (state.results[0].media_type === "person") {
     state.people.push(state.results[0]);
   }
   console.log(state.people);
 };
 
-const showCompResultsHtml = () => {
-  let html = "";
+const showHtmlCallback = (result, type) => {
+  resultHtml = `<div class='results__card'>`;
 
-  state.comparedResults.forEach(result => {
-    resultHtml = `<div class='results__card'>`;
+  /////////////////// MOVIE ///////////////////
+  if (result.media_type === "movie") {
+    console.log("movie");
+    if (result.poster_path) {
+      resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
+    }
+    // Creates a new div after the image
+    resultHtml += `<div class = "results__card--info">`;
 
     if (result.original_title) {
       resultHtml += `<h2>${result.original_title}</h2>`;
-    }
-    if (result.name) {
-      resultHtml += `<h2>${result.name}</h2>`;
     }
 
     if (result.vote_average) {
@@ -159,138 +245,163 @@ const showCompResultsHtml = () => {
     if (result.release_date) {
       resultHtml += `<p>${result.release_date}</p>`;
     }
+  }
+  /////////////////// POPULAR MOVIE ///////////////////
+  else if (type === "popular_movies") {
+    console.log("movie_popular");
+    if (result.poster_path) {
+      resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
+    }
+    // Creates a new div after the image
+    resultHtml += `<div class = "results__card--info">`;
+
+    if (result.original_title) {
+      resultHtml += `<h2>${result.original_title}</h2>`;
+    }
+
+    if (result.overview) {
+      resultHtml += `<p>${result.overview}</p>`;
+    }
+    if (result.release_date) {
+      resultHtml += `<p>${result.release_date}</p>`;
+    }
+    if (result.popularity) {
+      resultHtml += `<p>${result.popularity}</p>`;
+    }
+    if (result.vote_average) {
+      resultHtml += `<p>${result.vote_average}</p>`;
+    }
+  }
+
+  /////////////////// TV ///////////////////
+  else if (result.media_type === "tv") {
+    console.log("tv");
+    if (result.poster_path) {
+      resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.name}"></div>`;
+    }
+    // Creates a new div after the image
+    resultHtml += `<div class = "results__card--info">`;
+    if (result.name) {
+      resultHtml += `<h2>${result.name}</h2>`;
+    }
+    if (result.vote_average) {
+      resultHtml += `<p>${result.vote_average}</p>`;
+    }
+    if (result.release_date) {
+      resultHtml += `<p>${result.release_date}</p>`;
+    }
+  }
+
+  /////////////////// POPULAR TV ///////////////////
+  else if (type === "popular_tv") {
+    if (result.poster_path) {
+      resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.name}"></div>`;
+    }
+    // Creates a new div after the image
+    resultHtml += `<div class = "results__card--info">`;
+
+    if (result.name) {
+      resultHtml += `<h2>${result.name}</h2>`;
+    }
+
+    if (result.overview) {
+      resultHtml += `<p>${result.overview}</p>`;
+    }
+    if (result.first_air_date) {
+      resultHtml += `<p>${result.first_air_date}</p>`;
+    }
+    if (result.popularity) {
+      resultHtml += `<p>${result.popularity}</p>`;
+    }
+    if (result.vote_average) {
+      resultHtml += `<p>${result.vote_average}</p>`;
+    }
+  }
+
+  /////////////////// PERSON ///////////////////
+  else if (result.media_type === "person") {
+    console.log("person");
+    if (result.profile_path) {
+      resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.profile_path}" alt="${result.name}"></div>`;
+    }
+    // Creates a new div after the image
+    resultHtml += `<div class = "results__card--info">`;
+    if (result.name) {
+      resultHtml += `<h2>${result.name}</h2>`;
+    }
     if (result.known_for_department) {
       resultHtml += `<p>${result.known_for_department}</p>`;
     }
+  }
 
-    resultHtml += `</div>`;
+  /////////////////// POPULAR PERSON ///////////////////
+  else if (type === "popular_people") {
+    if (result.profile_path) {
+      resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.profile_path}" alt="${result.name}"></div>`;
+    }
+    // Creates a new div after the image
+    resultHtml += `<div class = "results__card--info">`;
+    if (result.name) {
+      resultHtml += `<h2>${result.name}</h2>`;
+    }
+    if (result.known_for_department) {
+      resultHtml += `<p>${result.known_for_department}</p>`;
+    }
+    if (result.known_for.length > 0) {
+      result.known_for.forEach(known_for => {
+        resultHtml += `<p>${known_for.original_title ||
+          known_for.original_name}</p>`;
+      });
+    }
+  }
 
-    html += resultHtml;
-  });
-  results__output.innerHTML = html;
+  // first div closes the right column, second dev closes results__card
+  resultHtml += `
+      </div> 
+      </div>
+    `;
+
+  // html += resultHtml;
+  return resultHtml;
 };
 
-function showHtml(input) {
+// The single function for any type of search html that is displayed to the user
+const showHtml = (input, type) => {
   let html = "";
 
   if (input === "") {
     results__output.innerHTML = html;
   } else {
     console.log(state.results);
-    state.results.forEach(result => {
-      resultHtml = `<div class='results__card'>`;
 
-      if (result.poster_path) {
-        resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
-      }
-      resultHtml += `<div class = "results__card--info">`;
-
-      if (result.original_title) {
-        resultHtml += `<h2>${result.original_title}</h2>`;
-      }
-
-      if (result.release_date) {
-        resultHtml += `<p>${result.release_date}</p>`;
-      }
-      if (result.name) {
-        resultHtml += `<h2>${result.name}</h2>`;
-      }
-      if (result.vote_average) {
-        resultHtml += `<p>${result.vote_average}</p>`;
-      }
-      if (result.known_for_department) {
-        resultHtml += `<p>${result.known_for_department}</p>`;
-      }
-
-      resultHtml += `</div></div>`;
-
-      html += resultHtml;
-    });
+    if (type === "standard_search") {
+      // Going through stored results from storeResults()
+      state.results.forEach(result => (html += showHtmlCallback(result)));
+    } else if (type === "compared_search") {
+      state.comparedResults.forEach(
+        result => (html += showHtmlCallback(result))
+      );
+    } else if (type === "popular_movies") {
+      html += `<div class = "results__title">Popular Movies</div>`;
+      state.results.forEach(
+        result => (html += showHtmlCallback(result, "popular_movies"))
+      );
+    } else if (type === "popular_tv") {
+      html += `<div class = "results__title">Popular TV</div>`;
+      state.results.forEach(
+        result => (html += showHtmlCallback(result, "popular_tv"))
+      );
+    } else if (type === "popular_people") {
+      html += `<div class = "results__title">Popular People</div>`;
+      state.results.forEach(
+        result => (html += showHtmlCallback(result, "popular_people"))
+      );
+    }
     results__output.innerHTML = html;
   }
-}
+};
 
-async function getPopularMovies() {
-  const response = await axios
-    .get(
-      `https://api.themoviedb.org/3/movie/popular?api_key=${key}&language=en-US&page=1`
-    )
-    .catch(error => {
-      console.log(error);
-    });
-  return response.data.results;
-}
-
-async function showPopularMovies() {
-  state.people = [];
-  tagPeople("");
-  results__info.style.display = "none";
-  let html = `<div class = "results__title">Popular Movies</div>`;
-  const popMoviesArray = await getPopularMovies();
-
-  popMoviesArray.forEach(movie => {
-    html += `<div class='results__card'>
-    <h2>${movie.original_title}</h2>
-    <p>${movie.overview}</p>
-    <p>${movie.release_date}</p>
-    </div>`;
-  });
-
-  results__output.innerHTML = html;
-}
-async function getPopularTv() {
-  const response = await axios
-    .get(
-      `https://api.themoviedb.org/3/tv/popular?api_key=${key}&language=en-US&page=1`
-    )
-    .catch(error => {
-      console.log(error);
-    });
-  return response.data.results;
-}
-
-async function showPopularTv() {
-  let html = `<div class = "results__title">Popular TV</div>`;
-  const popTvArray = await getPopularTv();
-
-  popTvArray.forEach(tv => {
-    html += `<div class='results__card'>
-      <h2>${tv.original_name}</h2>
-      <p>${tv.overview}</p>
-      <p>${tv.release_date}</p>
-      </div>`;
-  });
-
-  results__output.innerHTML = html;
-}
-
-async function getPopularPeople() {
-  const response = await axios
-    .get(
-      `https://api.themoviedb.org/3/person/popular?api_key=${key}&language=en-US&page=1`
-    )
-    .catch(error => {
-      console.log("error");
-    });
-  return response.data.results;
-}
-
-async function showPopularPeople() {
-  let html = `<div class = "results__title">Popular People</div>`;
-  const popPeopleArray = await getPopularPeople();
-
-  popPeopleArray.forEach(people => {
-    html += `<div class='results__card'>
-        <h2>${people.name}</h2>
-        <p>${people.popularity}</p>
-        <p>${people.known_for_department}</p>
-        </div>`;
-  });
-
-  results__output.innerHTML = html;
-}
-
-function tagPeople(input) {
+const tagPeople = input => {
   let html = "";
 
   if (input === "") {
@@ -302,7 +413,7 @@ function tagPeople(input) {
                   </div>
                   <a href="#" class='results__people'>`;
 
-    const clearButton = document.querySelector(".result__header--clear");
+    // const clearButton = document.querySelector(".result__header--clear");
 
     state.people.forEach(person => {
       resultHtml += `<p>${person.name}</p>`;
@@ -312,8 +423,9 @@ function tagPeople(input) {
     html += resultHtml;
   }
   results__info.innerHTML = html;
-}
+};
 
+///////////////// HELPERS /////////////////
 const preventTab = e => {
   if (e.keyCode === 9 || e.which === 9) {
     e.preventDefault();
@@ -322,7 +434,7 @@ const preventTab = e => {
 
 const checkTabPress = e => {
   if (e.which === 9 || e.keyCode === 9) {
-    checkFirst();
+    addFirstPerson();
     tagPeople();
     clearSearchInput();
     storeCredits();
@@ -345,13 +457,7 @@ const handleChange = e => {
   showResults(state.userInput);
 };
 
-const searchForm = document.querySelector(".search");
-const searchInput = document.querySelector(".search__input");
-const navMovies = document.querySelector("#moviesButton");
-const navTv = document.querySelector("#tvButton");
-const navPeople = document.querySelector("#peopleButton");
-const navLang = document.querySelector("#langButton");
-
+///////////////// EVENT HANDLERS ///////////////////
 searchForm.onsubmit = e => {
   e.preventDefault();
   controlSearch();
@@ -374,7 +480,7 @@ searchInput.onkeydown = e => {
 };
 
 navMovies.onclick = () => {
-  showPopularMovies();
+  storePopularMovies();
 };
 
 navTv.onclick = () => {
