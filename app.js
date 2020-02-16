@@ -1,6 +1,9 @@
 const key = "35596d0ce1799b9e4c7617c1698f94dd";
+
 const results__output = document.querySelector(".results__output");
 const results__info = document.querySelector(".results__info");
+const results__header = document.querySelector(".results__header");
+const results__taggedPeople = document.querySelector(".results__taggedPeople");
 const results = document.querySelector(".results");
 const searchForm = document.querySelector(".search");
 const searchInput = document.querySelector(".search__input");
@@ -13,13 +16,13 @@ const state = {
   userInput: "",
   results: [],
   comparedResults: [],
-  people: [],
+  comparedResultsThreePeople: [],
+  taggedPeople: [],
   // credits: {
   //   id: { cast: [{}, {}], crew: [{}, {}] }, // Get this data from API call and save it as a new K:V pair
   //   id: { cast: [{}, {}], crew: [{}, {}] },
   // },
-  credits: {},
-  moviesInTogether: []
+  credits: {}
 };
 
 ///////////////// GETTING DATA FUNCTIONS /////////////////
@@ -35,10 +38,10 @@ const getMovieData = async ID => {
 };
 
 // Multi-search. Gets any search result - people/tv/movie
-const getResults = async input => {
+const getResults = async (input, type) => {
   const response = await axios
     .get(
-      `https://api.themoviedb.org/3/search/multi?query=${input}&api_key=${key}`
+      `https://api.themoviedb.org/3/search/${type}?query=${input}&api_key=${key}`
     )
     .catch(error => {
       console.log(error);
@@ -98,7 +101,7 @@ const getPopularPeople = async () => {
 
 // Stores popular movies after using popular movies api, calls showHtml()
 const storePopularMovies = async () => {
-  state.people = [];
+  state.taggedPeople = [];
   tagPeople("");
   results__info.style.display = "none";
 
@@ -107,7 +110,7 @@ const storePopularMovies = async () => {
 };
 
 const showPopularTv = async () => {
-  state.people = [];
+  state.taggedPeople = [];
   tagPeople("");
   results__info.style.display = "none";
 
@@ -116,7 +119,7 @@ const showPopularTv = async () => {
 };
 
 const showPopularPeople = async () => {
-  state.people = [];
+  state.taggedPeople = [];
   tagPeople("");
   results__info.style.display = "none";
 
@@ -126,7 +129,7 @@ const showPopularPeople = async () => {
 
 // Saves the credits for the chosen person into the state
 const storeCredits = () => {
-  state.people.forEach(async person => {
+  state.taggedPeople.forEach(async person => {
     const response = await getCredits(person.id);
 
     //state.credits.push() - doesnt work as it creates a new array value each time rather that assigning K:V pairs
@@ -139,14 +142,14 @@ const storeCredits = () => {
     //   }
     // }
 
-    // This will change the results__output div to show the movies that both the people from state.people are in
-    if (state.people.length > 1) {
+    // This will change the results__output div to show the movies that both the people from state.taggedPeople are in
+    if (state.taggedPeople.length > 1) {
       compareCredits();
     }
   });
 };
 
-// Compare's the credits of the people in the state.people array
+// Compare's the credits of the people in the state.taggedPeople array
 const compareCredits = () => {
   // Takes an object and changes it's values into an array so we can loop over the values
   const creditArray = Object.values(state.credits);
@@ -155,7 +158,7 @@ const compareCredits = () => {
   // New array that will hold smaller arrays of the films the people have been in
   const filmArray = [];
 
-  // Loop over the new array
+  // Loop over the new array that holds the credits
   creditArray.forEach(element => {
     let tempArray = [];
     tempArray.push(element.cast);
@@ -196,99 +199,160 @@ const compareArrays = (array1, array2) => {
 };
 
 const showResults = input => {
+  console.log(input);
   storeResults(input);
 };
 
 // Gets the results of a search and stores in the state
 const storeResults = async input => {
-  if (input === "") {
-    return;
+  if (input === "" && state.taggedPeople.length > 1) {
+    showHtml("input not needed", "compared_search");
+  } else if (input === "") {
+    state.results = [];
+    showHtml(input, "standard_search");
   } else {
-    const results = await getResults(input);
-    console.log(results);
+    let results;
+    if (state.taggedPeople.length > 0) {
+      results = await getResults(input, "person");
+    } else {
+      results = await getResults(input, "multi");
+    }
     state.results = results;
+    // showHtml is called inside this function as
+    // it has to be called after getResults has finished
+    showHtml(input, "standard_search");
   }
-  // showHtml is called inside this function as
-  // it has to be called after getResults has finished
-  showHtml(input, "standard_search");
 };
 
 // Checks that the first result in state.results is a person so they can be added to tags
-// Then adds them to state.people
-// TODO - stop duplicates being added here - probably with a set
+// Then adds them to state.taggedPeople
 const addFirstPerson = () => {
-  if (state.results[0].media_type === "person") {
-    state.people.push(state.results[0]);
+  if (state.taggedPeople.length === 0) {
+    if (state.results[0].media_type === "person") {
+      if (state.taggedPeople.includes(state.results[0])) {
+        return;
+      } else {
+        state.taggedPeople.push(state.results[0]);
+      }
+    }
+  } else {
+    if (state.taggedPeople.includes(state.results[0])) {
+      return;
+    } else {
+      state.taggedPeople.push(state.results[0]);
+    }
   }
-  console.log(state.people);
+  console.log(state.taggedPeople);
 };
 
 const showHtmlCallback = (result, type) => {
+  let resultHtml;
   resultHtml = `<div class='results__card'>`;
 
   /////////////////// MOVIE ///////////////////
   if (result.media_type === "movie") {
-    console.log("movie");
     if (result.poster_path) {
       resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
     }
     // Creates a new div after the image
-    resultHtml += `<div class = "results__card--info">`;
+    resultHtml += `<div class = "results__card--info"><div class = "results__card--header">`;
 
     if (result.original_title) {
-      resultHtml += `<h2>${result.original_title}</h2>`;
-    }
-
-    if (result.vote_average) {
-      resultHtml += `<p>${result.vote_average}</p>`;
+      resultHtml += `<div class = "results__card--header2"><div class = "results__card--title"><h2>${result.original_title}</h2></div>`;
     }
     if (result.release_date) {
-      resultHtml += `<p>${result.release_date}</p>`;
+      resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
+    }
+
+    resultHtml += `</div>`;
+
+    if (result.vote_average) {
+      resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
+        percentage(result.vote_average)
+      )}%</p></div>`;
+    }
+
+    resultHtml += `</div>`;
+
+    if (result.overview) {
+      resultHtml += `<div class = "results__card--overview"><p>${truncateString(
+        result.overview,
+        100
+      )}</p></div>`;
+    }
+    if (result.popularity) {
+      resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
     }
   }
   /////////////////// POPULAR MOVIE ///////////////////
   else if (type === "popular_movies") {
-    console.log("movie_popular");
     if (result.poster_path) {
       resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
     }
     // Creates a new div after the image
-    resultHtml += `<div class = "results__card--info">`;
+    resultHtml += `<div class = "results__card--info"><div class = "results__card--header">`;
 
     if (result.original_title) {
-      resultHtml += `<h2>${result.original_title}</h2>`;
-    }
-
-    if (result.overview) {
-      resultHtml += `<p>${result.overview}</p>`;
+      resultHtml += `<div class = "results__card--header2"><div class = "results__card--title"><h2>${result.original_title}</h2></div>`;
     }
     if (result.release_date) {
-      resultHtml += `<p>${result.release_date}</p>`;
+      resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
+    }
+
+    resultHtml += `</div>`;
+
+    if (result.vote_average) {
+      resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
+        percentage(result.vote_average)
+      )}%</p></div>`;
+    }
+
+    resultHtml += `</div>`;
+
+    if (result.overview) {
+      resultHtml += `<div class = "results__card--overview"><p>${truncateString(
+        result.overview,
+        100
+      )}</p></div>`;
     }
     if (result.popularity) {
-      resultHtml += `<p>${result.popularity}</p>`;
-    }
-    if (result.vote_average) {
-      resultHtml += `<p>${result.vote_average}</p>`;
+      resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
     }
   }
 
   /////////////////// TV ///////////////////
   else if (result.media_type === "tv") {
-    console.log("tv");
     if (result.poster_path) {
       resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.name}"></div>`;
     }
     // Creates a new div after the image
-    resultHtml += `<div class = "results__card--info">`;
+    resultHtml += `<div class = "results__card--info"><div class = "results__card--header">`;
+
     if (result.name) {
-      resultHtml += `<h2>${result.name}</h2>`;
-    }
-    if (result.vote_average) {
-      resultHtml += `<p>${result.vote_average}</p>`;
+      resultHtml += `<div class = "results__card--header2"><div class = "results__card--title"><h2>${result.name}</h2></div>`;
     }
     if (result.release_date) {
-      resultHtml += `<p>${result.release_date}</p>`;
+      resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
+    }
+
+    resultHtml += `</div>`;
+
+    if (result.vote_average) {
+      resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
+        percentage(result.vote_average)
+      )}%</p></div>`;
+    }
+
+    resultHtml += `</div>`;
+
+    if (result.overview) {
+      resultHtml += `<div class = "results__card--overview"><p>${truncateString(
+        result.overview,
+        100
+      )}</p></div>`;
+    }
+    if (result.popularity) {
+      resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
     }
   }
 
@@ -298,40 +362,67 @@ const showHtmlCallback = (result, type) => {
       resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.name}"></div>`;
     }
     // Creates a new div after the image
-    resultHtml += `<div class = "results__card--info">`;
+    resultHtml += `<div class = "results__card--info"><div class = "results__card--header">`;
 
     if (result.name) {
-      resultHtml += `<h2>${result.name}</h2>`;
+      resultHtml += `<div class = "results__card--header2"><div class = "results__card--title"><h2>${result.name}</h2></div>`;
+    }
+    if (result.release_date) {
+      resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
     }
 
-    if (result.overview) {
-      resultHtml += `<p>${result.overview}</p>`;
+    resultHtml += `</div>`;
+
+    if (result.vote_average) {
+      resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
+        percentage(result.vote_average)
+      )}%</p></div>`;
     }
-    if (result.first_air_date) {
-      resultHtml += `<p>${result.first_air_date}</p>`;
+
+    resultHtml += `</div>`;
+
+    if (result.overview) {
+      resultHtml += `<div class = "results__card--overview"><p>${truncateString(
+        result.overview,
+        100
+      )}</p></div>`;
     }
     if (result.popularity) {
-      resultHtml += `<p>${result.popularity}</p>`;
-    }
-    if (result.vote_average) {
-      resultHtml += `<p>${result.vote_average}</p>`;
+      resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
     }
   }
 
   /////////////////// PERSON ///////////////////
-  else if (result.media_type === "person") {
-    console.log("person");
+  else if (result.media_type === "person" || type === "person") {
     if (result.profile_path) {
       resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.profile_path}" alt="${result.name}"></div>`;
     }
     // Creates a new div after the image
-    resultHtml += `<div class = "results__card--info">`;
+    resultHtml += `<div class = "results__person">`;
     if (result.name) {
-      resultHtml += `<h2>${result.name}</h2>`;
+      resultHtml += `<div class = "results__person--header"><h2>${result.name}</h2>`;
     }
     if (result.known_for_department) {
-      resultHtml += `<p>${result.known_for_department}</p>`;
+      resultHtml += `<h3> ${result.known_for_department}<h3/>`;
     }
+
+    resultHtml += `</div>`;
+
+    if (result.known_for.length > 0) {
+      resultHtml += `<div class = "results__person--main"><p>Known for</p>`;
+      result.known_for.forEach(known_for => {
+        resultHtml += `<p>• ${known_for.original_title ||
+          known_for.original_name} •</p>`;
+      });
+    }
+
+    resultHtml += `</div>`;
+
+    if (result.popularity) {
+      resultHtml += `<div class = "results__person--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
+    }
+
+    resultHtml += `</div>`;
   }
 
   /////////////////// POPULAR PERSON ///////////////////
@@ -340,19 +431,31 @@ const showHtmlCallback = (result, type) => {
       resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.profile_path}" alt="${result.name}"></div>`;
     }
     // Creates a new div after the image
-    resultHtml += `<div class = "results__card--info">`;
+    resultHtml += `<div class = "results__person">`;
     if (result.name) {
-      resultHtml += `<h2>${result.name}</h2>`;
+      resultHtml += `<div class = "results__person--header"><h2>${result.name}</h2>`;
     }
     if (result.known_for_department) {
-      resultHtml += `<p>${result.known_for_department}</p>`;
+      resultHtml += `<h3> ${result.known_for_department}<h3/>`;
     }
+
+    resultHtml += `</div>`;
+
     if (result.known_for.length > 0) {
+      resultHtml += `<div class = "results__person--main"><p>Known for</p>`;
       result.known_for.forEach(known_for => {
-        resultHtml += `<p>${known_for.original_title ||
-          known_for.original_name}</p>`;
+        resultHtml += `<p>• ${known_for.original_title ||
+          known_for.original_name} •</p>`;
       });
     }
+
+    resultHtml += `</div>`;
+
+    if (result.popularity) {
+      resultHtml += `<div class = "results__person--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
+    }
+
+    resultHtml += `</div>`;
   }
 
   // first div closes the right column, second dev closes results__card
@@ -376,7 +479,13 @@ const showHtml = (input, type) => {
 
     if (type === "standard_search") {
       // Going through stored results from storeResults()
-      state.results.forEach(result => (html += showHtmlCallback(result)));
+      if (state.taggedPeople.length > 0) {
+        state.results.forEach(
+          result => (html += showHtmlCallback(result, "person"))
+        );
+      } else {
+        state.results.forEach(result => (html += showHtmlCallback(result)));
+      }
     } else if (type === "compared_search") {
       state.comparedResults.forEach(
         result => (html += showHtmlCallback(result))
@@ -403,29 +512,62 @@ const showHtml = (input, type) => {
 
 const tagPeople = input => {
   let html = "";
-
   if (input === "") {
-    results__info.innerHTML = html;
+    results__taggedPeople.innerHTML = html;
+    results__header.innerHTML = html;
   } else {
-    resultHtml = `<div class="results__header">
-                  <div class="results__header--title">Tagged</div>
-                  <button class="results__header--clear">clear</button>
-                  </div>
-                  <a href="#" class='results__people'>`;
-
-    // const clearButton = document.querySelector(".result__header--clear");
-
-    state.people.forEach(person => {
-      resultHtml += `<p>${person.name}</p>`;
-    });
-
-    resultHtml += `</a>`;
-    html += resultHtml;
+    // results__header.insertAdjacentHTML("afterend", html);
+    renderResultsHeader();
+    renderTaggedPeople();
+    const clearTaggedPeopleButton = document.querySelector(
+      ".results__header--clear"
+    );
+    if (clearTaggedPeopleButton) {
+      clearTaggedPeopleButton.onclick = () => {
+        state.taggedPeople = [];
+        state.comparedResults = [];
+        state.credits = {};
+        results__info.style.display = "none";
+        renderResultsHeader("clear");
+        renderTaggedPeople();
+      };
+    }
   }
-  results__info.innerHTML = html;
 };
 
 ///////////////// HELPERS /////////////////
+const renderResultsHeader = type => {
+  if (type === "clear") {
+    results__header.innerHTML = "";
+  } else {
+    console.log("shs");
+    results__header.innerHTML = `
+    <div class="results__header--title">Tagged</div>
+    <button class="results__header--clear">clear</button>`;
+  }
+};
+
+const renderTaggedPeople = () => {
+  let html = "";
+  results__taggedPeople.innerHTML = html;
+  // results__header.insertAdjacentHTML("afterend", html);
+  let resultHtml;
+
+  resultHtml = `<a href="#" class='results__people'>`;
+
+  state.taggedPeople.forEach(person => {
+    resultHtml += `<p>${person.name}</p>`;
+  });
+
+  resultHtml += `</a>`;
+  if (state.taggedPeople.length === 0) {
+    resultHtml = "";
+  }
+  html += resultHtml;
+
+  results__taggedPeople.innerHTML = html;
+};
+
 const preventTab = e => {
   if (e.keyCode === 9 || e.which === 9) {
     e.preventDefault();
@@ -434,6 +576,7 @@ const preventTab = e => {
 
 const checkTabPress = e => {
   if (e.which === 9 || e.keyCode === 9) {
+    results__info.style.display = "flex";
     addFirstPerson();
     tagPeople();
     clearSearchInput();
@@ -457,6 +600,17 @@ const handleChange = e => {
   showResults(state.userInput);
 };
 
+const truncateString = (str, num) => {
+  if (str.length <= num) {
+    return str;
+  }
+  return str.slice(0, num) + "...";
+};
+
+const percentage = num => {
+  return (num / 10) * 100;
+};
+
 ///////////////// EVENT HANDLERS ///////////////////
 searchForm.onsubmit = e => {
   e.preventDefault();
@@ -470,7 +624,11 @@ searchForm.onsubmit = e => {
 // });
 
 searchInput.oninput = e => {
-  results__info.style.display = "flex";
+  if (state.taggedPeople.length > 0) {
+    results__info.style.display = "flex";
+  } else {
+    results__info.style.display = "none";
+  }
   handleChange(e);
 };
 

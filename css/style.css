@@ -674,4 +674,184 @@ body {
   width: 185px;
   margin: 8px;
   order: 0;
+  border-radius: 50%;
+}
+.results__card--image img {
+  border-radius: 5%;
+}
+
+.results__card--info {
+  margin: 8px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+}
+
+.results__card--info:after {
+  order: 1;
+  content: "";
+  width: 100%;
+  height: 1px;
+  background-color: #787878;
+  /* margin: 5px; */
+  align-self: center;
+  margin-bottom: 10px;
+}
+.results__card--info:before {
+  order: 3;
+  content: "";
+  width: 100%;
+  height: 1px;
+  background-color: #787878;
+  /* margin: 5px; */
+  align-self: center;
+  margin-bottom: 10px;
+}
+
+.results__card--header {
+  order: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  margin-top: 5px;
+}
+.results__card--header2 {
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+}
+.results__card--title {
+  display: flex;
+  justify-content: flex-end;
+}
+.results__card--title h2 {
+  text-align: right;
+}
+
+.results__card--release {
+  color: #787878;
+}
+
+.results__card--voteraverage {
+  height: 30px;
+  width: 30px;
+  order: -1;
+  font-weight: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 3px;
+  margin-left: 0;
+  border-radius: 50%;
+  /* border-bottom: 2px #ffcd94 solid; */
+  border: 2px #ffcd94 solid;
+  flex-shrink: 0;
+  background-color: white;
+}
+
+.results__card--voteraverage p {
+  padding: 5px;
+}
+
+.results__card--release {
+  margin-top: 3px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.results__card--popularity {
+  bottom: 10px;
+  display: flex;
+  order: 4;
+  flex-direction: column;
+}
+
+.results__card--popularity p {
+  color: #787878;
+  margin-top: 10px;
+}
+
+.results__card--overview {
+  order: 2;
+  color: #787878;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.results__person {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 5px;
+  position: relative;
+}
+
+.results__person--header {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  /* align-content: flex-end; */
+  width: 100%;
+}
+.results__person--header:after {
+  content: "";
+  width: 90%;
+  height: 1px;
+  background-color: #787878;
+  margin: 5px;
+  margin-left: 0;
+  align-self: flex-start;
+}
+.results__person--header h3 {
+  margin: 5px;
+  margin-bottom: 0;
+  margin-left: 0;
+  font-size: 12px;
+  color: #787878;
+}
+/* .results__person--header h2 {
+  text-align: right;
+}
+.results__person--header h3 {
+  text-align: right;
+} */
+
+.results__person--main {
+  /* margin-top: 20px; */
+  padding: 5px;
+  padding-left: 0;
+  display: flex;
+  font-size: 12px;
+  flex-direction: column;
+}
+
+.results__person--main p:not(:first-child) {
+  margin: 5px;
+  color: #787878;
+}
+
+.results__person--main:after {
+  content: "";
+  width: 90%;
+  height: 1px;
+  background-color: #787878;
+  margin: 5px;
+  margin-left: 0;
+  align-self: flex-start;
+}
+
+.results__person--popularity {
+  /* margin-top: 20px; */
+  bottom: 10px;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+.results__person--popularity p {
+  align-self: flex-start;
+  margin: 10px;
+  margin-left: 0;
+  color: #787878;
 }
