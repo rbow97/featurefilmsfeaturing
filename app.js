@@ -152,28 +152,39 @@ const storeCredits = () => {
 // Compare's the credits of the people in the state.taggedPeople array
 const compareCredits = () => {
   // Takes an object and changes it's values into an array so we can loop over the values
+  // creditArray is an array of objects - [{cast: [], crew: [], id: 3453534}, {}]. Each object is a person
   const creditArray = Object.values(state.credits);
   console.log(creditArray);
 
   // New array that will hold smaller arrays of the films the people have been in
   const filmArray = [];
 
-  // Loop over the new array that holds the credits
-  creditArray.forEach(element => {
-    let tempArray = [];
-    tempArray.push(element.cast);
+  if (state.taggedPeople.length === 2) {
+    // Loop over the new array that holds the credits
+    creditArray.forEach(element => {
+      let tempArray = [];
+      tempArray.push(element.cast);
 
-    // TODO - push crew into array
+      // TODO - push crew into array
 
-    filmArray.push(tempArray);
-  });
-  console.log(filmArray);
-  console.log(filmArray[0][0]);
-  const outputArray = compareArrays(filmArray[1][0], filmArray[0][0]);
+      filmArray.push(tempArray);
+    });
+    const outputArray = compareArrays(filmArray[1][0], filmArray[0][0]);
+    state.comparedResults = outputArray;
+    showHtml("input not needed", "compared_search");
+  } else if (state.taggedPeople.length === 3) {
+    // Taking the compared results of the first 2 people
+    filmArray.push(state.comparedResults);
+    // Taking the third person
+    filmArray.push(creditArray[creditArray.length - 1].cast);
 
-  state.comparedResults = outputArray;
+    const outputArray = compareArrays(filmArray[1], filmArray[0]);
+    // console.log(outputArray);
+    state.comparedResultsThreePeople = outputArray;
+    showHtml("input not needed", "compared_search_3");
+  }
+
   // showHtml(input, type)
-  showHtml("input not needed", "compared_search");
 
   // Very rough
   // state.results = outputArray;
@@ -186,11 +197,11 @@ const compareArrays = (array1, array2) => {
   const outputArray = [];
 
   // Sort the arrays so we have k sorted arrays
-
+  // console.log(array1);
+  // console.log(array2);
   for (let i = 0; i < array1.length; i++) {
     for (let j = 0; j < array2.length; j++) {
       if (array1[i].id === array2[j].id) {
-        // console.log("successful comparison");
         outputArray.push(array1[i]);
       }
     }
@@ -199,7 +210,7 @@ const compareArrays = (array1, array2) => {
 };
 
 const showResults = input => {
-  console.log(input);
+  // console.log(input);
   storeResults(input);
 };
 
@@ -242,7 +253,7 @@ const addFirstPerson = () => {
       state.taggedPeople.push(state.results[0]);
     }
   }
-  console.log(state.taggedPeople);
+  // console.log(state.taggedPeople);
 };
 
 const showHtmlCallback = (result, type) => {
@@ -475,7 +486,7 @@ const showHtml = (input, type) => {
   if (input === "") {
     results__output.innerHTML = html;
   } else {
-    console.log(state.results);
+    // console.log(state.results);
 
     if (type === "standard_search") {
       // Going through stored results from storeResults()
@@ -488,6 +499,10 @@ const showHtml = (input, type) => {
       }
     } else if (type === "compared_search") {
       state.comparedResults.forEach(
+        result => (html += showHtmlCallback(result))
+      );
+    } else if (type === "compared_search_3") {
+      state.comparedResultsThreePeople.forEach(
         result => (html += showHtmlCallback(result))
       );
     } else if (type === "popular_movies") {
@@ -516,7 +531,6 @@ const tagPeople = input => {
     results__taggedPeople.innerHTML = html;
     results__header.innerHTML = html;
   } else {
-    // results__header.insertAdjacentHTML("afterend", html);
     renderResultsHeader();
     renderTaggedPeople();
     const clearTaggedPeopleButton = document.querySelector(
@@ -524,9 +538,7 @@ const tagPeople = input => {
     );
     if (clearTaggedPeopleButton) {
       clearTaggedPeopleButton.onclick = () => {
-        state.taggedPeople = [];
-        state.comparedResults = [];
-        state.credits = {};
+        clearState();
         results__info.style.display = "none";
         renderResultsHeader("clear");
         renderTaggedPeople();
@@ -536,11 +548,18 @@ const tagPeople = input => {
 };
 
 ///////////////// HELPERS /////////////////
+const clearState = () => {
+  state.userInput = "";
+  state.taggedPeople = [];
+  state.comparedResults = [];
+  state.comparedResultsThreePeople = [];
+  state.credits = {};
+};
+
 const renderResultsHeader = type => {
   if (type === "clear") {
     results__header.innerHTML = "";
   } else {
-    console.log("shs");
     results__header.innerHTML = `
     <div class="results__header--title">Tagged</div>
     <button class="results__header--clear">clear</button>`;
@@ -638,18 +657,22 @@ searchInput.onkeydown = e => {
 };
 
 navMovies.onclick = () => {
+  clearState();
   storePopularMovies();
 };
 
 navTv.onclick = () => {
+  clearState();
   showPopularTv();
 };
 
 navPeople.onclick = () => {
+  clearState();
   showPopularPeople();
 };
 
 navLang.onclick = () => {
+  clearState();
   searchInput;
 };
 
