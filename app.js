@@ -18,11 +18,12 @@ const state = {
   comparedResults: [],
   comparedResultsThreePeople: [],
   taggedPeople: [],
+  credits: new Map()
   // credits: {
   //   id: { cast: [{}, {}], crew: [{}, {}] }, // Get this data from API call and save it as a new K:V pair
   //   id: { cast: [{}, {}], crew: [{}, {}] },
   // },
-  credits: {}
+  // cast: [{id: 34567, movie: little women, role: laurie}, {id: 2345678, movie: call me by your name, role: elio}]
 };
 
 ///////////////// GETTING DATA FUNCTIONS /////////////////
@@ -49,7 +50,7 @@ const getResults = async (input, type) => {
   return response.data.results;
 };
 
-// Gets the credit info for a person
+// Gets the credit info for a person using a specific API call for just credits
 const getCredits = async personId => {
   const response = await axios
     .get(
@@ -58,6 +59,7 @@ const getCredits = async personId => {
     .catch(error => {
       console.log(error);
     });
+  // returns this inforation to whatever is calling it
   return response.data;
 };
 
@@ -99,7 +101,7 @@ const getPopularPeople = async () => {
 
 ///////////////// STATE MANAGING FUNCTIONS /////////////////
 
-// Stores popular movies after using popular movies api, calls showHtml()
+// Stores popular movies after using popular movies api, calls showHtml() to show this info on UI
 const storePopularMovies = async () => {
   state.taggedPeople = [];
   tagPeople("");
@@ -130,31 +132,34 @@ const showPopularPeople = async () => {
 // Saves the credits for the chosen person into the state
 const storeCredits = () => {
   state.taggedPeople.forEach(async person => {
-    const response = await getCredits(person.id);
+    if (state.credits.get(person.id)) {
+      return;
+    } else {
+      const response = await getCredits(person.id);
+      // console.log("tagged person: " + response);
+      //state.credits.push() - doesnt work as it creates a new array value each time rather that assigning K:V pairs
+      state.credits.set(person.id, response);
+      // state = {
+      //   people: [{id:something}]
+      //   credits: {
+      //     person.id: response,                     //
+      //     4598345798: { cast: [{}, {}], crew: [{}, {}] },  // result - what it WILL look like
+      //   }
+      // }
 
-    //state.credits.push() - doesnt work as it creates a new array value each time rather that assigning K:V pairs
-    state.credits[person.id] = response;
-    // state = {
-    //   people: [{id:something}]
-    //   credits: {
-    //     person.id: response,                     //
-    //     4598345798: { cast: [{}, {}], crew: [{}, {}] },  // result - what it WILL look like
-    //   }
-    // }
-
-    // This will change the results__output div to show the movies that both the people from state.taggedPeople are in
-    if (state.taggedPeople.length > 1) {
-      compareCredits();
+      // This will change the results__output div to show the movies that both the people from state.taggedPeople are in
+      if (state.taggedPeople.length > 1) {
+        compareCredits();
+      }
     }
   });
 };
 
 // Compare's the credits of the people in the state.taggedPeople array
 const compareCredits = () => {
-  // Takes an object and changes it's values into an array so we can loop over the values
+  // Takes an object and changes its values into an array so we can loop over the values
   // creditArray is an array of objects - [{cast: [], crew: [], id: 3453534}, {}]. Each object is a person
-  const creditArray = Object.values(state.credits);
-  console.log(creditArray);
+  const creditArray = Array.from(state.credits.values());
 
   // New array that will hold smaller arrays of the films the people have been in
   const filmArray = [];
@@ -162,14 +167,11 @@ const compareCredits = () => {
   if (state.taggedPeople.length === 2) {
     // Loop over the new array that holds the credits
     creditArray.forEach(element => {
-      let tempArray = [];
-      tempArray.push(element.cast);
-
       // TODO - push crew into array
 
-      filmArray.push(tempArray);
+      filmArray.push(element.cast);
     });
-    const outputArray = compareArrays(filmArray[1][0], filmArray[0][0]);
+    const outputArray = compareArrays(filmArray[0], filmArray[1]);
     state.comparedResults = outputArray;
     showHtml("input not needed", "compared_search");
   } else if (state.taggedPeople.length === 3) {
@@ -177,7 +179,7 @@ const compareCredits = () => {
     filmArray.push(state.comparedResults);
     // Taking the third person
     filmArray.push(creditArray[creditArray.length - 1].cast);
-
+    console.log(filmArray);
     const outputArray = compareArrays(filmArray[1], filmArray[0]);
     // console.log(outputArray);
     state.comparedResultsThreePeople = outputArray;
@@ -256,6 +258,7 @@ const addFirstPerson = () => {
   // console.log(state.taggedPeople);
 };
 
+/////////////////// Gets and shows HTML info for results__card ///////////////////////////////////////////////////////////
 const showHtmlCallback = (result, type) => {
   let resultHtml;
   resultHtml = `<div class='results__card'>`;
@@ -478,6 +481,7 @@ const showHtmlCallback = (result, type) => {
   // html += resultHtml;
   return resultHtml;
 };
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 // The single function for any type of search html that is displayed to the user
 const showHtml = (input, type) => {
@@ -553,7 +557,7 @@ const clearState = () => {
   state.taggedPeople = [];
   state.comparedResults = [];
   state.comparedResultsThreePeople = [];
-  state.credits = {};
+  state.credits = new Map();
 };
 
 const renderResultsHeader = type => {
