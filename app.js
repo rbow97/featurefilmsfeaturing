@@ -5,7 +5,7 @@ const results__info = document.querySelector(".results__info");
 const results__header = document.querySelector(".results__header");
 const results__taggedPeople = document.querySelector(".results__taggedPeople");
 const results = document.querySelector(".results");
-const searchForm = document.querySelector(".search");
+const searchForm = document.querySelector(".searchbar__search");
 const searchInput = document.querySelector(".search__input");
 const navMovies = document.querySelector("#moviesButton");
 const navTv = document.querySelector("#tvButton");
@@ -136,7 +136,7 @@ const storeCredits = () => {
       return;
     } else {
       const response = await getCredits(person.id);
-      // console.log("tagged person: " + response);
+
       //state.credits.push() - doesnt work as it creates a new array value each time rather that assigning K:V pairs
       state.credits.set(person.id, response);
       // state = {
@@ -171,6 +171,7 @@ const compareCredits = () => {
 
       filmArray.push(element.cast);
     });
+
     const outputArray = compareArrays(filmArray[0], filmArray[1]);
     state.comparedResults = outputArray;
     showHtml("input not needed", "compared_search");
@@ -179,7 +180,6 @@ const compareCredits = () => {
     filmArray.push(state.comparedResults);
     // Taking the third person
     filmArray.push(creditArray[creditArray.length - 1].cast);
-    console.log(filmArray);
     const outputArray = compareArrays(filmArray[1], filmArray[0]);
     // console.log(outputArray);
     state.comparedResultsThreePeople = outputArray;
@@ -203,11 +203,19 @@ const compareArrays = (array1, array2) => {
   // console.log(array2);
   for (let i = 0; i < array1.length; i++) {
     for (let j = 0; j < array2.length; j++) {
-      if (array1[i].id === array2[j].id) {
+      if (array1[i].id === array2[j].id && array1[i].name === array2[j].name) {
         outputArray.push(array1[i]);
+      } else {
+        if (
+          array1[i].id === array2[j].id &&
+          array1[i].original_title === array2[j].original_title
+        ) {
+          outputArray.push(array1[i]);
+        }
       }
     }
   }
+
   return outputArray;
 };
 
@@ -247,6 +255,8 @@ const addFirstPerson = () => {
       } else {
         state.taggedPeople.push(state.results[0]);
       }
+    } else if (!state.results[0].media_type) {
+      state.taggedPeople.push(clickedPerson);
     }
   } else {
     if (state.taggedPeople.includes(state.results[0])) {
@@ -258,6 +268,26 @@ const addFirstPerson = () => {
   // console.log(state.taggedPeople);
 };
 
+const addPerson = clickedPerson => {
+  if (state.taggedPeople.length === 0) {
+    if (state.results[0].media_type === "person") {
+      if (state.taggedPeople.includes(clickedPerson)) {
+        return;
+      } else {
+        state.taggedPeople.push(clickedPerson);
+      }
+    } else if (!clickedPerson.media_type) {
+      state.taggedPeople.push(clickedPerson);
+    }
+  } else {
+    if (state.taggedPeople.includes(clickedPerson)) {
+      return;
+    } else {
+      state.taggedPeople.push(clickedPerson);
+    }
+  }
+};
+
 /////////////////// Gets and shows HTML info for results__card ///////////////////////////////////////////////////////////
 const showHtmlCallback = (result, type) => {
   let resultHtml;
@@ -266,72 +296,124 @@ const showHtmlCallback = (result, type) => {
   /////////////////// MOVIE ///////////////////
   if (result.media_type === "movie") {
     if (result.poster_path) {
-      resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
+      console.log("image working");
+      resultHtml += ` <div class = "results__card--image"</div><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
+      // resultHtml += `<div class = "results__card--image"><img class = "movie-image"  src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
     }
+
+    // resultHtml += `</div>`;
+
     // Creates a new div after the image
     resultHtml += `<div class = "results__card--info"><div class = "results__card--header">`;
 
     if (result.original_title) {
-      resultHtml += `<div class = "results__card--header2"><div class = "results__card--title"><h2>${result.original_title}</h2></div>`;
+      resultHtml += `<p class = "results__card--title-movie">${truncateString(
+        result.original_title,
+        30
+      )}</p>`;
     }
     if (result.release_date) {
       resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
     }
-
-    resultHtml += `</div>`;
-
     if (result.vote_average) {
-      resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
-        percentage(result.vote_average)
-      )}%</p></div>`;
+      const voteAverage = voteAverageBorder(result);
+
+      resultHtml += voteAverage;
     }
+    // if (result.original_title) {
+    //   resultHtml += `<div class = "results__card--header2"><div class = "results__card--title"><h2>${result.original_title}</h2></div>`;
+    // }
+    // if (result.release_date) {
+    //   resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
+    // }
 
     resultHtml += `</div>`;
+
+    // if (result.vote_average) {
+    //   const voteAverage = voteAverageBorder(result);
+
+    //   resultHtml += voteAverage;
+    // }
+
+    // if (result.vote_average) {
+    //   resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
+    //     percentage(result.vote_average)
+    //   )}%</p></div>`;
+    // }
 
     if (result.overview) {
       resultHtml += `<div class = "results__card--overview"><p>${truncateString(
         result.overview,
-        100
+        200
       )}</p></div>`;
     }
-    if (result.popularity) {
-      resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
-    }
+
+    resultHtml += `<div class = results__card--read-more>Read more</<div></div>`;
+
+    // if (result.popularity) {
+    //   resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
+    // }
   }
   /////////////////// POPULAR MOVIE ///////////////////
   else if (type === "popular_movies") {
     if (result.poster_path) {
-      resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
+      console.log("image working");
+      resultHtml += ` <div class = "results__card--image"</div><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
+      // resultHtml += `<div class = "results__card--image"><img class = "movie-image"  src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
     }
+
+    // resultHtml += `</div>`;
+
     // Creates a new div after the image
     resultHtml += `<div class = "results__card--info"><div class = "results__card--header">`;
 
     if (result.original_title) {
-      resultHtml += `<div class = "results__card--header2"><div class = "results__card--title"><h2>${result.original_title}</h2></div>`;
+      resultHtml += `<p class = "results__card--title-movie">${truncateString(
+        result.original_title,
+        30
+      )}</p>`;
     }
     if (result.release_date) {
       resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
     }
-
-    resultHtml += `</div>`;
-
     if (result.vote_average) {
-      resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
-        percentage(result.vote_average)
-      )}%</p></div>`;
+      const voteAverage = voteAverageBorder(result);
+
+      resultHtml += voteAverage;
     }
+    // if (result.original_title) {
+    //   resultHtml += `<div class = "results__card--header2"><div class = "results__card--title"><h2>${result.original_title}</h2></div>`;
+    // }
+    // if (result.release_date) {
+    //   resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
+    // }
 
     resultHtml += `</div>`;
+
+    // if (result.vote_average) {
+    //   const voteAverage = voteAverageBorder(result);
+
+    //   resultHtml += voteAverage;
+    // }
+
+    // if (result.vote_average) {
+    //   resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
+    //     percentage(result.vote_average)
+    //   )}%</p></div>`;
+    // }
 
     if (result.overview) {
       resultHtml += `<div class = "results__card--overview"><p>${truncateString(
         result.overview,
-        100
+        200
       )}</p></div>`;
     }
-    if (result.popularity) {
-      resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
-    }
+
+    resultHtml += `<div class = results__card--read-more>Read more</<div></div>`;
+
+    // if (result.popularity) {
+    //   resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
+    // }
   }
 
   /////////////////// TV ///////////////////
@@ -343,7 +425,10 @@ const showHtmlCallback = (result, type) => {
     resultHtml += `<div class = "results__card--info"><div class = "results__card--header">`;
 
     if (result.name) {
-      resultHtml += `<div class = "results__card--header2"><div class = "results__card--title"><h2>${result.name}</h2></div>`;
+      resultHtml += `<div class = "results__card--header2"><div class = "results__card--title-tv"><p>${truncateString(
+        result.name,
+        30
+      )}</p></div>`;
     }
     if (result.release_date) {
       resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
@@ -352,22 +437,26 @@ const showHtmlCallback = (result, type) => {
     resultHtml += `</div>`;
 
     if (result.vote_average) {
-      resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
-        percentage(result.vote_average)
-      )}%</p></div>`;
+      const voteAverage = voteAverageBorder(result);
+
+      resultHtml += voteAverage;
     }
+
+    // if (result.vote_average) {
+    //   resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
+    //     percentage(result.vote_average)
+    //   )}%</p></div>`;
+    // }
 
     resultHtml += `</div>`;
 
     if (result.overview) {
       resultHtml += `<div class = "results__card--overview"><p>${truncateString(
         result.overview,
-        100
+        200
       )}</p></div>`;
     }
-    if (result.popularity) {
-      resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
-    }
+    resultHtml += `<div class = results__card--read-more>Read more</<div></div>`;
   }
 
   /////////////////// POPULAR TV ///////////////////
@@ -379,31 +468,37 @@ const showHtmlCallback = (result, type) => {
     resultHtml += `<div class = "results__card--info"><div class = "results__card--header">`;
 
     if (result.name) {
-      resultHtml += `<div class = "results__card--header2"><div class = "results__card--title"><h2>${result.name}</h2></div>`;
+      resultHtml += `<div class = "results__card--header2"><div class = "results__card--title-tv"><p>${truncateString(
+        result.name,
+        30
+      )}</p></div>`;
     }
     if (result.release_date) {
       resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
     }
 
+    if (result.vote_average) {
+      const voteAverage = voteAverageBorder(result);
+
+      resultHtml += voteAverage;
+    }
     resultHtml += `</div>`;
 
-    if (result.vote_average) {
-      resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
-        percentage(result.vote_average)
-      )}%</p></div>`;
-    }
+    // if (result.vote_average) {
+    //   resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
+    //     percentage(result.vote_average)
+    //   )}%</p></div>`;
+    // }
 
     resultHtml += `</div>`;
 
     if (result.overview) {
       resultHtml += `<div class = "results__card--overview"><p>${truncateString(
         result.overview,
-        100
+        200
       )}</p></div>`;
     }
-    if (result.popularity) {
-      resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
-    }
+    resultHtml += `<div class = results__card--read-more>Read more</<div></div>`;
   }
 
   /////////////////// PERSON ///////////////////
@@ -436,7 +531,7 @@ const showHtmlCallback = (result, type) => {
       resultHtml += `<div class = "results__person--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
     }
 
-    resultHtml += `</div>`;
+    resultHtml += `<div class = "results__card--tag"> <p>tag</p> <img id = "${result.id}" class="results__card--tag-icon" src="img/SVG/plus.svg" alt="plus icon"/></div></div>`;
   }
 
   /////////////////// POPULAR PERSON ///////////////////
@@ -447,10 +542,10 @@ const showHtmlCallback = (result, type) => {
     // Creates a new div after the image
     resultHtml += `<div class = "results__person">`;
     if (result.name) {
-      resultHtml += `<div class = "results__person--header"><h2>${result.name}</h2>`;
+      resultHtml += `<div class = "results__person--header"><p>${result.name}</p>`;
     }
     if (result.known_for_department) {
-      resultHtml += `<h3> ${result.known_for_department}<h3/>`;
+      resultHtml += `<h3>${result.known_for_department}<h3/>`;
     }
 
     resultHtml += `</div>`;
@@ -465,11 +560,7 @@ const showHtmlCallback = (result, type) => {
 
     resultHtml += `</div>`;
 
-    if (result.popularity) {
-      resultHtml += `<div class = "results__person--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
-    }
-
-    resultHtml += `</div>`;
+    resultHtml += `<div class = "results__card--tag"> <p>tag</p> <img id ="${result.id}" class="results__card--tag-icon" src="img/SVG/plus.svg" alt="plus icon"/></div></div>`;
   }
 
   // first div closes the right column, second dev closes results__card
@@ -495,37 +586,88 @@ const showHtml = (input, type) => {
     if (type === "standard_search") {
       // Going through stored results from storeResults()
       if (state.taggedPeople.length > 0) {
-        state.results.forEach(
-          result => (html += showHtmlCallback(result, "person"))
+        state.results.forEach(result => {
+          html += showHtmlCallback(result, "person");
+          results__output.innerHTML = html;
+        });
+        const nodes = document.querySelectorAll(".results__card--tag-icon");
+        nodes.forEach(
+          node =>
+            (node.onclick = () => {
+              const desiredResult = state.results.filter(
+                result => result.id == node.id
+              );
+
+              results__info.style.display = "flex";
+              addPerson(desiredResult[0]);
+              tagPeople();
+              storeCredits();
+            })
         );
       } else {
-        state.results.forEach(result => (html += showHtmlCallback(result)));
+        state.results.forEach(result => {
+          html += showHtmlCallback(result);
+          results__output.innerHTML = html;
+        });
+        const nodes = document.querySelectorAll(".results__card--tag-icon");
+        nodes.forEach(
+          node =>
+            (node.onclick = () => {
+              const desiredResult = state.results.filter(
+                result => result.id == node.id
+              );
+
+              results__info.style.display = "flex";
+              addPerson(desiredResult[0]);
+              tagPeople();
+              storeCredits();
+            })
+        );
       }
     } else if (type === "compared_search") {
       state.comparedResults.forEach(
         result => (html += showHtmlCallback(result))
       );
+      results__output.innerHTML = html;
     } else if (type === "compared_search_3") {
       state.comparedResultsThreePeople.forEach(
         result => (html += showHtmlCallback(result))
       );
+      results__output.innerHTML = html;
     } else if (type === "popular_movies") {
-      html += `<div class = "results__title">Popular Movies</div>`;
+      html += `<div class = "results__title"><p>Popular Movies</p></div>`;
       state.results.forEach(
         result => (html += showHtmlCallback(result, "popular_movies"))
       );
+      results__output.innerHTML = html;
     } else if (type === "popular_tv") {
-      html += `<div class = "results__title">Popular TV</div>`;
+      html += `<div class = "results__title"><p>Popular TV</p></div>`;
       state.results.forEach(
         result => (html += showHtmlCallback(result, "popular_tv"))
       );
+      results__output.innerHTML = html;
     } else if (type === "popular_people") {
-      html += `<div class = "results__title">Popular People</div>`;
-      state.results.forEach(
-        result => (html += showHtmlCallback(result, "popular_people"))
+      html += `<div class = "results__title"><p>Popular People</p></div>`;
+      state.results.forEach(result => {
+        html += showHtmlCallback(result, "popular_people");
+        results__output.innerHTML = html;
+      });
+      const nodes = document.querySelectorAll(".results__card--tag-icon");
+
+      nodes.forEach(
+        node =>
+          (node.onclick = () => {
+            const desiredResult = state.results.filter(
+              result => result.id == node.id
+            );
+
+            results__info.style.display = "flex";
+            addPerson(desiredResult[0]);
+            tagPeople();
+            storeCredits();
+          })
       );
     }
-    results__output.innerHTML = html;
   }
 };
 
@@ -632,6 +774,26 @@ const truncateString = (str, num) => {
 
 const percentage = num => {
   return (num / 10) * 100;
+};
+
+const voteAverageBorder = result => {
+  let voteHtml = "";
+  if (result.vote_average < 4) {
+    voteHtml += `<div class = "results__card--voteraverage40 results__card--voteraverage"><p>${Math.trunc(
+      percentage(result.vote_average)
+    )}%</p></div>`;
+  } else if (result.vote_average >= 4 && result.vote_average < 6) {
+    console.log("working");
+    console.log(result.vote_average);
+    voteHtml += `<div class = "results__card--voteraverage4060 results__card--voteraverage"><p>${Math.trunc(
+      percentage(result.vote_average)
+    )}%</p></div>`;
+  } else if (result.vote_average >= 6) {
+    voteHtml += `<div class = "results__card--voteraverage60 results__card--voteraverage"><p>${Math.trunc(
+      percentage(result.vote_average)
+    )}%</p></div>`;
+  }
+  return voteHtml;
 };
 
 ///////////////// EVENT HANDLERS ///////////////////
