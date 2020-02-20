@@ -438,6 +438,16 @@ body {
   margin: 1% 4rem;
   padding: 1rem;
   height: 100%;
+  position: relative;
+}
+
+.results__home {
+  position: absolute;
+  width: 100%;
+  display: grid;
+  flex-direction: column;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr auto;
 }
 
 .results__info {
@@ -479,7 +489,6 @@ body {
   font-family: "Anton", Arial, Helvetica, sans-serif;
   color: grey;
   font-size: 1rem;
-  font-style: italic;
   padding: 0.3rem 0.7rem;
   border-radius: 0.5rem;
   margin-bottom: 0;
@@ -573,7 +582,6 @@ body {
 }
 
 .results__info ul li a {
-  font-family: "montserrat", Arial, Helvetica, sans-serif;
   text-decoration: none;
   font-size: 1.5rem;
   /* width: 100%; */
@@ -610,17 +618,22 @@ body {
 }
 
 .results__output {
-  display: flex;
-  flex-wrap: wrap;
-  flex-grow: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr auto;
+  /* display: flex; */
+  /* flex-wrap: wrap; */
+  /* flex-grow: 1; */
   order: 1;
   /* border: 2px #000000 solid; */
-  width: 80%;
+  width: 100%;
   /* border-right: 2px solid #000019; */
   /* overflow: hidden; */
 }
 
 .results__title {
+  grid-column-start: 1;
+  grid-column-end: 3;
   font-family: "Anton", Arial, Helvetica, sans-serif;
   letter-spacing: 0.1rem;
   margin: 1%;
@@ -676,7 +689,7 @@ body {
   display: flex;
   font-family: "Roboto condensed", ariel;
   font-size: 1rem;
-  width: 48%;
+  /* width: 48%; */
   box-sizing: border-box;
   height: 280px;
   margin: 1%;
@@ -720,6 +733,7 @@ body {
   align-items: flex-start;
   justify-content: flex-start;
   padding: 0.5rem;
+  padding-right: 5.5rem;
   position: relative;
 }
 .results__card--title-movie {
@@ -729,7 +743,7 @@ body {
   text-transform: uppercase;
   color: #000019;
   letter-spacing: 0.1rem;
-  text-shadow: -2px 2px 0 #ffd700;
+  /* text-shadow: -2px 2px 0 #ffd700; */
 }
 .results__card--title-tv {
   margin: 0;
@@ -739,7 +753,7 @@ body {
   text-transform: uppercase;
   color: #000019;
   letter-spacing: 0.1rem;
-  text-shadow: -2px 2px 0 #ffd700;
+  /* text-shadow: -2px 2px 0 #ffd700; */
 }
 
 .results__card--release {
@@ -768,6 +782,7 @@ body {
 }
 
 .results__card--read-more {
+  cursor: pointer;
   margin: 0.2rem;
   margin-top: 0.7rem;
   order: 99;
@@ -778,16 +793,28 @@ body {
   align-items: center; */
   font-size: 1.5rem;
   background-color: #add8e6;
-  color: white;
+  /* border: 0.2rem #2c528c solid; */
+  color: #000019;
   padding: 0.5rem;
   border-radius: 0.5rem;
   right: 2.5rem;
   bottom: 0;
-  box-shadow: -2px 2px 0 #2c528c;
   align-self: flex-start;
 }
 
+.results__card--read-more:hover {
+  transform: translateY(-0.5rem);
+  transform: translateX(0.5rem);
+  box-shadow: -2.5px 2.5px 0 #2c528c;
+}
+
+.results__card--read-more:active {
+  transform: translateX(0);
+  transform: translateY(0);
+  box-shadow: 0 0;
+}
 .results__card--tag {
+  cursor: pointer;
   display: flex;
   align-items: center;
   margin: 0.2rem;
@@ -818,7 +845,7 @@ body {
   cursor: pointer;
 }
 
-.results__card--tag-icon:hover {
+.results__card--tag:hover .results__card--tag-icon {
   animation: buttonrotate 0.5s ease-out;
 }
 
@@ -834,7 +861,7 @@ body {
 .results__person--header p {
   font-family: "Anton", Arial, Helvetica, sans-serif;
   letter-spacing: 1px;
-  text-shadow: -2px 2px 0 #ffd700;
+  /* text-shadow: -2px 2px 0 #ffd700; */
   color: #000019;
   font-size: 2rem;
   align-self: flex-start;

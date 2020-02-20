@@ -1,5 +1,8 @@
 const key = "35596d0ce1799b9e4c7617c1698f94dd";
 
+const results__home = document.querySelector(".results__home");
+const results__homeMovies = document.querySelector(".results__home--movies");
+const results__homeTv = document.querySelector(".results__home--tv");
 const results__output = document.querySelector(".results__output");
 const results__info = document.querySelector(".results__info");
 const results__header = document.querySelector(".results__header");
@@ -94,7 +97,7 @@ const getPopularPeople = async () => {
       `https://api.themoviedb.org/3/person/popular?api_key=${key}&language=en-US&page=1`
     )
     .catch(error => {
-      console.log("error");
+      console.log(error);
     });
   return response.data.results;
 };
@@ -102,22 +105,30 @@ const getPopularPeople = async () => {
 ///////////////// STATE MANAGING FUNCTIONS /////////////////
 
 // Stores popular movies after using popular movies api, calls showHtml() to show this info on UI
-const storePopularMovies = async () => {
+const storePopularMovies = async type => {
   state.taggedPeople = [];
   tagPeople("");
   results__info.style.display = "none";
-
   state.results = await getPopularMovies();
-  showHtml("input not needed", "popular_movies");
+  if (type === "home") {
+    showHtml("input not needed", "popMoviesHome");
+  } else {
+    showHtml("input not needed", "popular_movies");
+  }
 };
 
-const showPopularTv = async () => {
+const showPopularTv = async type => {
   state.taggedPeople = [];
   tagPeople("");
   results__info.style.display = "none";
 
   state.results = await getPopularTv();
-  showHtml("input not needed", "popular_tv");
+
+  if (type === "home") {
+    showHtml("input not needed", "popTvHome");
+  } else {
+    showHtml("input not needed", "popular_tv");
+  }
 };
 
 const showPopularPeople = async () => {
@@ -163,14 +174,35 @@ const compareCredits = () => {
 
   // New array that will hold smaller arrays of the films the people have been in
   const filmArray = [];
+  console.log(creditArray);
+  // if (state.taggedPeople.length === 1) {
+  //   creditArray.forEach(element => {
+  //     let tempArray = mergeArrays(element.cast, element.crew);
+  //     filmArray.push(tempArray);
+  //   });
+  //   console.log(filmArray);
+
+  //   state.comparedResults = filmArray;
+  //   showHtml("input not needed", "compared_search");
+  // }
 
   if (state.taggedPeople.length === 2) {
     // Loop over the new array that holds the credits
-    creditArray.forEach(element => {
-      // TODO - push crew into array
+    // const person1CastAndCrew = mergeArrays(
+    //   creditArray[0].cast,
+    //   creditArray[0].crew
+    // );
+    // const person2CastAndCrew = mergeArrays(
+    //   creditArray[1].cast,
+    //   creditArray[1].crew
+    // );
 
-      filmArray.push(element.cast);
+    creditArray.forEach(element => {
+      let tempArray = mergeArrays(element.cast, element.crew);
+      filmArray.push(tempArray);
     });
+
+    console.log(filmArray);
 
     const outputArray = compareArrays(filmArray[0], filmArray[1]);
     state.comparedResults = outputArray;
@@ -179,7 +211,13 @@ const compareCredits = () => {
     // Taking the compared results of the first 2 people
     filmArray.push(state.comparedResults);
     // Taking the third person
-    filmArray.push(creditArray[creditArray.length - 1].cast);
+    const mergedArray = mergeArrays(
+      creditArray[creditArray.length - 1].cast,
+      creditArray[creditArray.length - 1].crew
+    );
+    filmArray.push(mergedArray);
+    // filmArray.push(creditArray[creditArray.length - 1].cast);
+    // filmArray.push(creditArray[creditArray.length - 1].crew);
     const outputArray = compareArrays(filmArray[1], filmArray[0]);
     // console.log(outputArray);
     state.comparedResultsThreePeople = outputArray;
@@ -195,6 +233,8 @@ const compareCredits = () => {
 
 // Compare arrays for the compareCredits function
 const compareArrays = (array1, array2) => {
+  console.log(array1);
+  console.log(array2);
   //We need a better version
   const outputArray = [];
 
@@ -226,6 +266,7 @@ const showResults = input => {
 
 // Gets the results of a search and stores in the state
 const storeResults = async input => {
+  //
   if (input === "" && state.taggedPeople.length > 1) {
     showHtml("input not needed", "compared_search");
   } else if (input === "") {
@@ -296,7 +337,41 @@ const showHtmlCallback = (result, type) => {
   /////////////////// MOVIE ///////////////////
   if (result.media_type === "movie") {
     if (result.poster_path) {
-      console.log("image working");
+      resultHtml += ` <div class = "results__card--image"</div><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
+    }
+
+    // Creates a new div after the image
+    resultHtml += `<div class = "results__card--info"><div class = "results__card--header">`;
+
+    if (result.original_title) {
+      resultHtml += `<p class = "results__card--title-movie">${truncateString(
+        result.original_title,
+        30
+      )}</p>`;
+    }
+    if (result.release_date) {
+      resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
+    }
+    if (result.vote_average) {
+      const voteAverage = voteAverageBorder(result);
+
+      resultHtml += voteAverage;
+    }
+
+    resultHtml += `</div>`;
+
+    if (result.overview) {
+      resultHtml += `<div class = "results__card--overview"><p>${truncateString(
+        result.overview,
+        200
+      )}</p></div>`;
+    }
+
+    resultHtml += `<div class = results__card--read-more>Read more</div></div>`;
+  }
+  /////////////////// POPULAR MOVIE ///////////////////
+  else if (type === "popular_movies") {
+    if (result.poster_path) {
       resultHtml += ` <div class = "results__card--image"</div><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
       // resultHtml += `<div class = "results__card--image"><img class = "movie-image"  src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
     }
@@ -348,21 +423,18 @@ const showHtmlCallback = (result, type) => {
       )}</p></div>`;
     }
 
-    resultHtml += `<div class = results__card--read-more>Read more</<div></div>`;
+    resultHtml += `<div class = results__card--read-more>Read more</div></div>`;
 
     // if (result.popularity) {
     //   resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
     // }
   }
-  /////////////////// POPULAR MOVIE ///////////////////
-  else if (type === "popular_movies") {
-    if (result.poster_path) {
-      console.log("image working");
-      resultHtml += ` <div class = "results__card--image"</div><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
-      // resultHtml += `<div class = "results__card--image"><img class = "movie-image"  src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
-    }
 
-    // resultHtml += `</div>`;
+  /////////////////// HOMEPAGE POPULAR MOVIES ////////////////////////////////////////
+  else if (type === "popMoviesHome") {
+    if (result.poster_path) {
+      resultHtml += ` <div class = "results__card--image"</div><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
+    }
 
     // Creates a new div after the image
     resultHtml += `<div class = "results__card--info"><div class = "results__card--header">`;
@@ -381,26 +453,8 @@ const showHtmlCallback = (result, type) => {
 
       resultHtml += voteAverage;
     }
-    // if (result.original_title) {
-    //   resultHtml += `<div class = "results__card--header2"><div class = "results__card--title"><h2>${result.original_title}</h2></div>`;
-    // }
-    // if (result.release_date) {
-    //   resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
-    // }
 
     resultHtml += `</div>`;
-
-    // if (result.vote_average) {
-    //   const voteAverage = voteAverageBorder(result);
-
-    //   resultHtml += voteAverage;
-    // }
-
-    // if (result.vote_average) {
-    //   resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
-    //     percentage(result.vote_average)
-    //   )}%</p></div>`;
-    // }
 
     if (result.overview) {
       resultHtml += `<div class = "results__card--overview"><p>${truncateString(
@@ -409,11 +463,43 @@ const showHtmlCallback = (result, type) => {
       )}</p></div>`;
     }
 
-    resultHtml += `<div class = results__card--read-more>Read more</<div></div>`;
+    resultHtml += `<div class = results__card--read-more>Read more</div></div></div>`;
+  }
 
-    // if (result.popularity) {
-    //   resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
-    // }
+  //////////////////// HOMEPAGE POPULAR TV /////////////////////////////////////
+  else if (type === "popTvHome") {
+    if (result.poster_path) {
+      resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.name}"></div>`;
+    }
+    // Creates a new div after the image
+    resultHtml += `<div class = "results__card--info"><div class = "results__card--header">`;
+
+    if (result.name) {
+      resultHtml += `<div class = "results__card--header2"><div class = "results__card--title-tv"><p>${truncateString(
+        result.name,
+        30
+      )}</p></div>`;
+    }
+    if (result.release_date) {
+      resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
+    }
+
+    if (result.vote_average) {
+      const voteAverage = voteAverageBorder(result);
+
+      resultHtml += voteAverage;
+    }
+    resultHtml += `</div>`;
+
+    resultHtml += `</div>`;
+
+    if (result.overview) {
+      resultHtml += `<div class = "results__card--overview"><p>${truncateString(
+        result.overview,
+        200
+      )}</p></div>`;
+    }
+    resultHtml += `<div class = results__card--read-more>Read more</div></div>`;
   }
 
   /////////////////// TV ///////////////////
@@ -531,7 +617,7 @@ const showHtmlCallback = (result, type) => {
       resultHtml += `<div class = "results__person--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
     }
 
-    resultHtml += `<div class = "results__card--tag"> <p>tag</p> <img id = "${result.id}" class="results__card--tag-icon" src="img/SVG/plus.svg" alt="plus icon"/></div></div>`;
+    resultHtml += `<div id ="${result.id}" class = " results__card--tag"> <p>tag</p> <img  class="results__card--tag-icon" src="img/SVG/plus.svg" alt="plus icon"/></div></div>`;
   }
 
   /////////////////// POPULAR PERSON ///////////////////
@@ -560,7 +646,7 @@ const showHtmlCallback = (result, type) => {
 
     resultHtml += `</div>`;
 
-    resultHtml += `<div class = "results__card--tag"> <p>tag</p> <img id ="${result.id}" class="results__card--tag-icon" src="img/SVG/plus.svg" alt="plus icon"/></div></div>`;
+    resultHtml += `<div id ="${result.id}" class = "results__card--tag"> <p>tag</p> <img  class="results__card--tag-icon" src="img/SVG/plus.svg" alt="plus icon"/></div></div>`;
   }
 
   // first div closes the right column, second dev closes results__card
@@ -578,7 +664,20 @@ const showHtmlCallback = (result, type) => {
 const showHtml = (input, type) => {
   let html = "";
 
-  if (input === "") {
+  if (input === "input not needed" && type === "popMoviesHome") {
+    console.log("working");
+    html += `<div class = "results__title"><p>Popular Movies</p></div>`;
+    state.results.forEach(
+      result => (html += showHtmlCallback(result, "popMoviesHome"))
+    );
+    results__homeMovies.innerHTML = html;
+  } else if (input === "input not needed" && type === "popTvHome") {
+    html += `<div class = "results__title"><p>Popular TV</p></div>`;
+    state.results.forEach(
+      result => (html += showHtmlCallback(result, "popTvHome"))
+    );
+    results__homeTv.innerHTML = html;
+  } else if (input === "") {
     results__output.innerHTML = html;
   } else {
     // console.log(state.results);
@@ -590,7 +689,7 @@ const showHtml = (input, type) => {
           html += showHtmlCallback(result, "person");
           results__output.innerHTML = html;
         });
-        const nodes = document.querySelectorAll(".results__card--tag-icon");
+        const nodes = document.querySelectorAll(".results__card--tag");
         nodes.forEach(
           node =>
             (node.onclick = () => {
@@ -609,7 +708,8 @@ const showHtml = (input, type) => {
           html += showHtmlCallback(result);
           results__output.innerHTML = html;
         });
-        const nodes = document.querySelectorAll(".results__card--tag-icon");
+        const nodes = document.querySelectorAll(".results__card--tag");
+
         nodes.forEach(
           node =>
             (node.onclick = () => {
@@ -624,15 +724,52 @@ const showHtml = (input, type) => {
             })
         );
       }
+      // cutting out the graham norton show, close up w the hollywood reporter, the academy awards, saturday night live
     } else if (type === "compared_search") {
-      state.comparedResults.forEach(
-        result => (html += showHtmlCallback(result))
-      );
+      state.comparedResults.forEach(result => {
+        if (
+          result.id === 1220 ||
+          result.id === 1667 ||
+          result.id === 63498 ||
+          result.id === 27023 ||
+          result.id === 1489 ||
+          result.id === 562 ||
+          result.id === 1667 ||
+          result.id === 1709 ||
+          result.id === 3167 ||
+          result.id === 4573 ||
+          result.id === 2224 ||
+          result.id === 2518 ||
+          result.id === 66488 ||
+          result.original_name === "Live with Regis and Kathie Lee"
+        ) {
+          return;
+        }
+        html += showHtmlCallback(result);
+      });
       results__output.innerHTML = html;
     } else if (type === "compared_search_3") {
-      state.comparedResultsThreePeople.forEach(
-        result => (html += showHtmlCallback(result))
-      );
+      state.comparedResultsThreePeople.forEach(result => {
+        if (
+          result.id === 1220 ||
+          result.id === 1667 ||
+          result.id === 63498 ||
+          result.id === 27023 ||
+          result.id === 1489 ||
+          result.id === 562 ||
+          result.id === 1667 ||
+          result.id === 1709 ||
+          result.id === 3167 ||
+          result.id === 4573 ||
+          result.id === 2224 ||
+          result.id === 2518 ||
+          result.id === 66488 ||
+          result.original_name === "Live with Regis and Kathie Lee"
+        ) {
+          return;
+        }
+        html += showHtmlCallback(result);
+      });
       results__output.innerHTML = html;
     } else if (type === "popular_movies") {
       html += `<div class = "results__title"><p>Popular Movies</p></div>`;
@@ -652,7 +789,7 @@ const showHtml = (input, type) => {
         html += showHtmlCallback(result, "popular_people");
         results__output.innerHTML = html;
       });
-      const nodes = document.querySelectorAll(".results__card--tag-icon");
+      const nodes = document.querySelectorAll(".results__card--tag");
 
       nodes.forEach(
         node =>
@@ -694,6 +831,31 @@ const tagPeople = input => {
 };
 
 ///////////////// HELPERS /////////////////
+const mergeArrays = (...arrays) => {
+  let jointArray = [];
+
+  arrays.forEach(array => {
+    jointArray = [...jointArray, ...array];
+  });
+
+  console.log(jointArray);
+
+  let map = {};
+  let uniqueArray;
+  for (let i = 0; i < jointArray.length; i++) {
+    if (map[jointArray[i].id]) {
+      continue;
+    } else {
+      map[jointArray[i].id] = jointArray[i];
+    }
+  }
+  console.log(map);
+
+  uniqueArray = Array.from(Object.values(map));
+
+  return uniqueArray;
+};
+
 const clearState = () => {
   state.userInput = "";
   state.taggedPeople = [];
@@ -749,7 +911,7 @@ const checkTabPress = e => {
   }
 };
 
-const clearSearchInput = e => {
+const clearSearchInput = () => {
   searchInput.value = "";
 };
 
@@ -783,8 +945,6 @@ const voteAverageBorder = result => {
       percentage(result.vote_average)
     )}%</p></div>`;
   } else if (result.vote_average >= 4 && result.vote_average < 6) {
-    console.log("working");
-    console.log(result.vote_average);
     voteHtml += `<div class = "results__card--voteraverage4060 results__card--voteraverage"><p>${Math.trunc(
       percentage(result.vote_average)
     )}%</p></div>`;
@@ -800,6 +960,10 @@ const voteAverageBorder = result => {
 searchForm.onsubmit = e => {
   e.preventDefault();
   controlSearch();
+  document.activeElement.blur();
+  if (searchInput.value === "") {
+    clearSearchInput();
+  }
 };
 
 //the same
@@ -823,25 +987,38 @@ searchInput.onkeydown = e => {
 };
 
 navMovies.onclick = () => {
+  results__home.innerHTML = "";
   clearState();
   storePopularMovies();
 };
 
 navTv.onclick = () => {
+  results__home.innerHTML = "";
   clearState();
   showPopularTv();
 };
 
 navPeople.onclick = () => {
+  results__home.innerHTML = "";
   clearState();
   showPopularPeople();
 };
 
 navLang.onclick = () => {
   clearState();
-  searchInput;
+  // searchInput;
 };
 
 // clearButton.onclick = () => {
 //   tagPeople("");
 // };
+
+///////////////////////////////////////////////////////
+
+initLandingPage = () => {
+  // adding home sets up the html for homepage
+  storePopularMovies("home");
+  showPopularTv("home");
+};
+
+initLandingPage();
