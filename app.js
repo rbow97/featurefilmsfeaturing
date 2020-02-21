@@ -310,6 +310,7 @@ const addFirstPerson = () => {
 };
 
 const addPerson = clickedPerson => {
+  clearSearchInput();
   if (state.taggedPeople.length === 0) {
     if (state.results[0].media_type === "person") {
       if (state.taggedPeople.includes(clickedPerson)) {
@@ -338,6 +339,8 @@ const showHtmlCallback = (result, type) => {
   if (result.media_type === "movie") {
     if (result.poster_path) {
       resultHtml += ` <div class = "results__card--image"</div><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
+    } else {
+      `<div class = "results__card--imageplaceholder"></div>`;
     }
 
     // Creates a new div after the image
@@ -374,9 +377,9 @@ const showHtmlCallback = (result, type) => {
     if (result.poster_path) {
       resultHtml += ` <div class = "results__card--image"</div><img src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
       // resultHtml += `<div class = "results__card--image"><img class = "movie-image"  src="https://image.tmdb.org/t/p/w185${result.poster_path}" alt="${result.original_title}"></div>`;
+    } else {
+      `<div class = "results__card--imageplaceholder"></div>`;
     }
-
-    // resultHtml += `</div>`;
 
     // Creates a new div after the image
     resultHtml += `<div class = "results__card--info"><div class = "results__card--header">`;
@@ -595,26 +598,34 @@ const showHtmlCallback = (result, type) => {
     // Creates a new div after the image
     resultHtml += `<div class = "results__person">`;
     if (result.name) {
-      resultHtml += `<div class = "results__person--header"><h2>${result.name}</h2>`;
+      resultHtml += `<div class = "results__person--header"><p>${result.name}</p>`;
     }
     if (result.known_for_department) {
-      resultHtml += `<h3> ${result.known_for_department}<h3/>`;
+      resultHtml += `<h3>${result.known_for_department}<h3/>`;
     }
 
     resultHtml += `</div>`;
 
     if (result.known_for.length > 0) {
-      resultHtml += `<div class = "results__person--main"><p>Known for</p>`;
-      result.known_for.forEach(known_for => {
-        resultHtml += `<p>• ${known_for.original_title ||
-          known_for.original_name} •</p>`;
+      result.known_for.forEach((known_for, index) => {
+        let displayTitle = "";
+        if (known_for.original_title) {
+          displayTitle = known_for.original_title;
+        } else if (known_for.original_name) {
+          displayTitle = known_for.original_name;
+        } else {
+          displayTitle = "";
+        }
+
+        resultHtml += `<div class = "known-for-title known-for-titles-${index +
+          1}"><img class = "known-for-image" src = "https://image.tmdb.org/t/p/w94_and_h141_bestv2${
+          known_for.poster_path
+        }" alt = "${known_for.original_title ||
+          known_for.original_name}"><a href = "#">${truncateString(
+          displayTitle,
+          17
+        )}</a></div> `;
       });
-    }
-
-    resultHtml += `</div>`;
-
-    if (result.popularity) {
-      resultHtml += `<div class = "results__person--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
     }
 
     resultHtml += `<div id ="${result.id}" class = " results__card--tag"> <p>tag</p> <img  class="results__card--tag-icon" src="img/SVG/plus.svg" alt="plus icon"/></div></div>`;
@@ -637,14 +648,28 @@ const showHtmlCallback = (result, type) => {
     resultHtml += `</div>`;
 
     if (result.known_for.length > 0) {
-      resultHtml += `<div class = "results__person--main"><p>Known for</p>`;
-      result.known_for.forEach(known_for => {
-        resultHtml += `<p>• ${known_for.original_title ||
-          known_for.original_name} •</p>`;
+      result.known_for.forEach((known_for, index) => {
+        let displayTitle = "";
+        if (known_for.original_title) {
+          displayTitle = known_for.original_title;
+        } else if (known_for.original_name) {
+          displayTitle = known_for.original_name;
+        } else {
+          displayTitle = "";
+        }
+
+        resultHtml += `<div class = "known-for-title known-for-titles-${index +
+          1}"><img class = "known-for-image" src = "https://image.tmdb.org/t/p/w94_and_h141_bestv2${
+          known_for.poster_path
+        }" alt = "${known_for.original_title ||
+          known_for.original_name}"><a href = "#">${truncateString(
+          displayTitle,
+          17
+        )}</a></div> `;
       });
     }
 
-    resultHtml += `</div>`;
+    // resultHtml += `</div>`;
 
     resultHtml += `<div id ="${result.id}" class = "results__card--tag"> <p>tag</p> <img  class="results__card--tag-icon" src="img/SVG/plus.svg" alt="plus icon"/></div></div>`;
   }
@@ -724,7 +749,7 @@ const showHtml = (input, type) => {
             })
         );
       }
-      // cutting out the graham norton show, close up w the hollywood reporter, the academy awards, saturday night live
+      // cutting out the graham norton show, close up w the hollywood reporter, the academy awards, saturday night live etc
     } else if (type === "compared_search") {
       state.comparedResults.forEach(result => {
         if (
@@ -741,6 +766,7 @@ const showHtml = (input, type) => {
           result.id === 2224 ||
           result.id === 2518 ||
           result.id === 66488 ||
+          result.id === 60971 ||
           result.original_name === "Live with Regis and Kathie Lee"
         ) {
           return;
@@ -764,6 +790,7 @@ const showHtml = (input, type) => {
           result.id === 2224 ||
           result.id === 2518 ||
           result.id === 66488 ||
+          result.id === 60971 ||
           result.original_name === "Live with Regis and Kathie Lee"
         ) {
           return;
@@ -904,6 +931,7 @@ const preventTab = e => {
 const checkTabPress = e => {
   if (e.which === 9 || e.keyCode === 9) {
     results__info.style.display = "flex";
+
     addFirstPerson();
     tagPeople();
     clearSearchInput();
@@ -982,6 +1010,7 @@ searchInput.oninput = e => {
 };
 
 searchInput.onkeydown = e => {
+  results__home.innerHTML = "";
   checkTabPress(e);
   preventTab(e);
 };
@@ -1011,7 +1040,7 @@ navLang.onclick = () => {
 
 // clearButton.onclick = () => {
 //   tagPeople("");
-// };
+//
 
 ///////////////////////////////////////////////////////
 
@@ -1019,6 +1048,7 @@ initLandingPage = () => {
   // adding home sets up the html for homepage
   storePopularMovies("home");
   showPopularTv("home");
+  console.log("hello");
 };
 
 initLandingPage();
