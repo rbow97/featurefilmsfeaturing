@@ -1,0 +1,27 @@
+{
+  "name": "filmfeaturing",
+  "version": "1.0.0",
+  "description": "feature films project",
+  "main": "app.js",
+  "scripts": {
+    "dev": "webpack --mode development",
+    "build": "webpack --mode production",
+    "start": "webpack-dev-server --mode development --open"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rbow97/FeatureFilmFeaturing.git"
+  },
+  "author": "Rose Bowen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rbow97/FeatureFilmFeaturing/issues"
+  },
+  "homepage": "https://github.com/rbow97/FeatureFilmFeaturing#readme",
+  "devDependencies": {
+    "html-webpack-plugin": "^3.2.0",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
+  }
+}
