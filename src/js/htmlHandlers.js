@@ -235,7 +235,7 @@ export const showHtmlCallback = (result, type) => {
     if (result.profile_path) {
       resultHtml += `<div class = "results__card--image"><img src="https://image.tmdb.org/t/p/w185${result.profile_path}" alt="${result.name}"></div>`;
     } else {
-      resultHtml += `<div class = "results__card--image"><img src ="../img/noimage.png" width = "185" height = "278"> </div>`;
+      resultHtml += `<div class = "results__card--image"><img src ="img/noimage.png" width = "185" height = "278"> </div>`;
     }
     // Creates a new div after the image
     resultHtml += `<div class = "results__person">`;
@@ -276,7 +276,7 @@ export const showHtmlCallback = (result, type) => {
       resultHtml += `</div>`;
     }
 
-    resultHtml += `<div id ="${result.id}" class = " results__card--tag"> <p>tag</p> <img  class="results__card--tag-icon" src="../img/SVG/plus.svg"/></div></div>`;
+    resultHtml += `<div id ="${result.id}" class = " results__card--tag"> <p>tag</p> <img  class="results__card--tag-icon" src="img/SVG/plus.svg"/></div></div>`;
   }
 
   /////////////////// POPULAR PERSON ///////////////////
