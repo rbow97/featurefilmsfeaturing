@@ -507,9 +507,4 @@ const initLandingPage = () => {
   showPopularTv("home");
 };
 
-console.log(state);
 initLandingPage();
-
-const initMoviePage = id => {
-  console.log(id);
-};
