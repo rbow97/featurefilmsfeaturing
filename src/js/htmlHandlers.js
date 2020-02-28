@@ -37,15 +37,9 @@ export const showHtmlCallback = (result, type) => {
     if (result.overview) {
       resultHtml += `<div class = "results__card--overview"><p>${truncateString(
         result.overview,
-        200
+        300
       )}</p></div>`;
     }
-
-    resultHtml += `<a href='/movie.html' class = results__card--read-more>Read more</a></div>`;
-    // const readMore = document.querySelector(".results__card--read-more");
-    // readMore.onclick = () => {
-    //   showMovieData(result.id);
-    // };
   }
   /////////////////// POPULAR MOVIE ///////////////////
   else if (type === "popular_movies") {
@@ -73,39 +67,15 @@ export const showHtmlCallback = (result, type) => {
 
       resultHtml += voteAverage;
     }
-    // if (result.original_title) {
-    //   resultHtml += `<div class = "results__card--header2"><div class = "results__card--title"><h2>${result.original_title}</h2></div>`;
-    // }
-    // if (result.release_date) {
-    //   resultHtml += `<div class = "results__card--release"><p>${result.release_date}</p></div>`;
-    // }
 
     resultHtml += `</div>`;
-
-    // if (result.vote_average) {
-    //   const voteAverage = voteAverageBorder(result);
-
-    //   resultHtml += voteAverage;
-    // }
-
-    // if (result.vote_average) {
-    //   resultHtml += `<div class = "results__card--voteraverage"><p>${Math.trunc(
-    //     percentage(result.vote_average)
-    //   )}%</p></div>`;
-    // }
 
     if (result.overview) {
       resultHtml += `<div class = "results__card--overview"><p>${truncateString(
         result.overview,
-        200
+        300
       )}</p></div>`;
     }
-
-    resultHtml += `<div class = results__card--read-more>Read more</div></div>`;
-
-    // if (result.popularity) {
-    //   resultHtml += `<div class = "results__card--popularity"><h3>Popularity</h3> <p>• ${result.popularity} •</p></div>`;
-    // }
   }
 
   /////////////////// HOMEPAGE POPULAR MOVIES ////////////////////////////////////////
@@ -137,11 +107,9 @@ export const showHtmlCallback = (result, type) => {
     if (result.overview) {
       resultHtml += `<div class = "results__card--overview"><p>${truncateString(
         result.overview,
-        200
+        300
       )}</p></div>`;
     }
-
-    resultHtml += `<div class = results__card--read-more>Read more</div></div></div>`;
   }
 
   //////////////////// HOMEPAGE POPULAR TV /////////////////////////////////////
@@ -174,10 +142,9 @@ export const showHtmlCallback = (result, type) => {
     if (result.overview) {
       resultHtml += `<div class = "results__card--overview"><p>${truncateString(
         result.overview,
-        200
+        300
       )}</p></div>`;
     }
-    resultHtml += `<div class = results__card--read-more>Read more</div></div>`;
   }
 
   /////////////////// TV ///////////////////
@@ -217,10 +184,9 @@ export const showHtmlCallback = (result, type) => {
     if (result.overview) {
       resultHtml += `<div class = "results__card--overview"><p>${truncateString(
         result.overview,
-        200
+        300
       )}</p></div>`;
     }
-    resultHtml += `<div class = results__card--read-more>Read more</<div></div>`;
   }
 
   /////////////////// POPULAR TV ///////////////////
@@ -259,10 +225,9 @@ export const showHtmlCallback = (result, type) => {
     if (result.overview) {
       resultHtml += `<div class = "results__card--overview"><p>${truncateString(
         result.overview,
-        200
+        300
       )}</p></div>`;
     }
-    resultHtml += `<div class = results__card--read-more>Read more</<div></div>`;
   }
 
   /////////////////// PERSON ///////////////////
@@ -284,6 +249,7 @@ export const showHtmlCallback = (result, type) => {
     resultHtml += `</div>`;
 
     if (result.known_for.length > 0) {
+      resultHtml += `<div class = "known-for-images">`;
       result.known_for.forEach((known_for, index) => {
         let displayTitle = "";
         if (known_for.original_title) {
@@ -302,11 +268,12 @@ export const showHtmlCallback = (result, type) => {
             known_for.original_name}"><a href = "#">${truncateString(
             displayTitle,
             25
-          )}</a></div> `;
+          )}</a></div>`;
         } else {
           return;
         }
       });
+      resultHtml += `</div>`;
     }
 
     resultHtml += `<div id ="${result.id}" class = " results__card--tag"> <p>tag</p> <img  class="results__card--tag-icon" src="../img/SVG/plus.svg"/></div></div>`;
@@ -329,6 +296,7 @@ export const showHtmlCallback = (result, type) => {
     resultHtml += `</div>`;
 
     if (result.known_for.length > 0) {
+      resultHtml += `<div class = "known-for-images">`;
       result.known_for.forEach((known_for, index) => {
         let displayTitle = "";
         if (known_for.original_title) {
@@ -346,11 +314,10 @@ export const showHtmlCallback = (result, type) => {
           known_for.original_name}"><a href = "#">${truncateString(
           displayTitle,
           25
-        )}</a></div> `;
+        )}</a></div>`;
       });
+      resultHtml += `</div>`;
     }
-
-    // resultHtml += `</div>`;
 
     resultHtml += `<div id ="${result.id}" class = "results__card--tag"> <p>tag</p> <img  class="results__card--tag-icon" src="/img/SVG/plus.svg" alt="plus icon"/></div></div>`;
   }

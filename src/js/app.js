@@ -5,7 +5,7 @@ import {
   getPopularMovies,
   getPopularTv,
   getPopularPeople
-} from "./apiCalls/apiCalls";
+} from "./apiCalls";
 
 import { compareArrays, removeUnwantedMedia, mergeArrays } from "./helpers";
 
@@ -23,7 +23,6 @@ const searchInput = document.querySelector(".search__input");
 const navMovies = document.querySelector("#moviesButton");
 const navTv = document.querySelector("#tvButton");
 const navPeople = document.querySelector("#peopleButton");
-const navLang = document.querySelector("#langButton");
 
 const state = {
   userInput: "",
@@ -56,8 +55,11 @@ const showPopularMovies = async type => {
   results__info.style.display = "none";
   state.results = await getPopularMovies();
   if (type === "home") {
+    results__output.style.display = "none";
     showHtml("input not needed", "popMoviesHome");
   } else {
+    results__output.style.display = "grid";
+    results__home.style.display = "none";
     showHtml("input not needed", "popular_movies");
   }
 };
@@ -70,8 +72,11 @@ const showPopularTv = async type => {
   state.results = await getPopularTv();
 
   if (type === "home") {
+    results__output.style.display = "none";
     showHtml("input not needed", "popTvHome");
   } else {
+    results__output.style.display = "grid";
+    results__home.style.display = "none";
     showHtml("input not needed", "popular_tv");
   }
 };
@@ -80,6 +85,8 @@ const showPopularPeople = async () => {
   state.taggedPeople = [];
   tagPeople("");
   results__info.style.display = "none";
+  results__home.style.display = "none";
+  results__output.style.display = "grid";
 
   state.results = await getPopularPeople();
   showHtml("input not needed", "popular_people");
@@ -178,10 +185,15 @@ const addFirstPerson = () => {
         state.taggedPeople.push(state.results[0]);
       }
     } else if (!state.results[0].media_type) {
-      state.taggedPeople.push(clickedPerson);
+      if (state.taggedPeople.includes(clickedPerson)) {
+        return;
+      } else {
+        state.taggedPeople.push(clickedPerson);
+      }
     }
   } else {
     if (state.taggedPeople.includes(state.results[0])) {
+      console.log("tagged people");
       return;
     } else {
       state.taggedPeople.push(state.results[0]);
@@ -199,7 +211,11 @@ const addPerson = clickedPerson => {
         state.taggedPeople.push(clickedPerson);
       }
     } else if (!clickedPerson.media_type) {
-      state.taggedPeople.push(clickedPerson);
+      if (state.taggedPeople.includes(clickedPerson)) {
+        return;
+      } else {
+        state.taggedPeople.push(clickedPerson);
+      }
     }
   } else {
     if (state.taggedPeople.includes(clickedPerson)) {
@@ -260,7 +276,14 @@ const showHtml = (input, type) => {
           results__output.innerHTML = html;
         });
         const nodes = document.querySelectorAll(".results__card--tag");
-
+        const readMoreNodes = document.querySelectorAll(
+          ".results__card--read-more"
+        );
+        readMoreNodes.forEach(
+          (readMoreNodes.onclick = () => {
+            initMoviePage(readMoreNodes.id);
+          })
+        );
         nodes.forEach(
           node =>
             (node.onclick = () => {
@@ -334,6 +357,9 @@ const tagPeople = input => {
   if (input === "") {
     results__taggedPeople.innerHTML = html;
     results__header.innerHTML = html;
+  } else if (state.taggedPeople.length > 3) {
+    console.log("tagged people");
+    return;
   } else {
     renderResultsHeader();
     renderTaggedPeople();
@@ -395,7 +421,7 @@ const renderTaggedPeople = () => {
 const checkTabPress = e => {
   if (e.which === 9 || e.keyCode === 9) {
     results__info.style.display = "flex";
-
+    state.userInput = "";
     e.preventDefault();
     addFirstPerson();
     tagPeople();
@@ -446,6 +472,8 @@ searchInput.oninput = e => {
 };
 
 searchInput.onkeydown = e => {
+  results__output.style.display = "grid";
+  results__home.style.display = "none";
   results__home.innerHTML = "";
   checkTabPress(e);
 };
@@ -467,12 +495,6 @@ navPeople.onclick = () => {
   clearState();
   showPopularPeople();
 };
-
-navLang.onclick = () => {
-  clearState();
-  // searchInput;
-};
-
 // clearButton.onclick = () => {
 //   tagPeople("");
 //
@@ -487,3 +509,7 @@ const initLandingPage = () => {
 
 console.log(state);
 initLandingPage();
+
+const initMoviePage = id => {
+  console.log(id);
+};
