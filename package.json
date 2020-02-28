@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "webpack --mode development",
     "build": "webpack --mode production",
-    "start": "webpack-dev-server --mode development --open"
+    "start": "webpack-dev-server --mode development --open",
+    "deploy": "gh-pages -d dist"
   },
   "repository": {
     "type": "git",
@@ -14,14 +15,17 @@
   },
   "author": "Rose Bowen",
   "license": "ISC",
+  "homepage": "http://rbow97.github.io/FeatureFilmFeaturing",
   "bugs": {
     "url": "https://github.com/rbow97/FeatureFilmFeaturing/issues"
   },
-  "homepage": "https://github.com/rbow97/FeatureFilmFeaturing#readme",
   "devDependencies": {
     "html-webpack-plugin": "^3.2.0",
     "webpack": "^4.41.6",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.10.3"
+  },
+  "dependencies": {
+    "gh-pages": "^2.2.0"
   }
 }
